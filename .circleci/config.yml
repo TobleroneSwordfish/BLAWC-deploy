@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  -build
+  - build
   deploy:
     machine:
       enabled: true
