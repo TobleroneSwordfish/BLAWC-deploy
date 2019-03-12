@@ -2,13 +2,13 @@ version: 2
 jobs:
   - build
   - deploy:
-    machine:
-      enabled: true
-    steps:
-      - run:
-          name: Deploy Over SSH
-          command: |
-            ssh $SSH_USER@$SSH_HOST "cd circle && git pull && sudo killall java && sudo killall socat && sudo socat tcp-l:443,fork,reuseaddr tcp:127.0.0.1:4430 & && mvn exec:java &"
+      machine:
+        enabled: true
+      steps:
+        - run:
+            name: Deploy Over SSH
+            command: |
+              ssh $SSH_USER@$SSH_HOST "cd circle && git pull && sudo killall java && sudo killall socat && sudo socat tcp-l:443,fork,reuseaddr tcp:127.0.0.1:4430 & && mvn exec:java &"
 
 workflows:
   version: 2
