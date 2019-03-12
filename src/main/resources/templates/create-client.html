@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head th:insert="fragments/general.html :: header"/>
+<head>
+    <title>Case Creation</title>
+</head>
+<body>
+
+<div th:replace="fragments/general.html :: top-bar"></div>
+
+<div class="jumbotron text-center" style="margin-bottom:0; height: 100px;">
+    <h1>Add Client To Case</h1>
+</div>
+<form style="max-width: 50%; margin-left:5%; margin-top: 3%" th:action="@{/create-client}" th:object="${clientCreation}" method="post">
+    <h4>Client Details</h4>
+    <div class="input-group">
+        <span class="input-group-addon" id="basic-addon1" style="margin-top:15px"></span>
+        <input type="text" class="form-control" style="margin-right: 20px" placeholder="First Name" aria-describedby="basic-addon1" th:field="*{firstName}">
+        <input type="text" class="form-control" style="margin-right: 20px" placeholder="Last Name" aria-describedby="basic-addon1" th:field="*{lastName}">
+    </div>
+    <div class="input-group">
+        <span class="input-group-addon" id="basic-addon1"style="margin-top:15px"></span>
+        <input type="text" class="form-control" style="margin-right: 20px" placeholder="Email" aria-describedby="basic-addon1" th:field="*{email}">
+        <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+        <input type="text" class="form-control" style="margin-right: 20px" placeholder="Telephone Number" aria-describedby="basic-addon1" th:field="*{telephone}">
+    </div>
+    <div class="input-group" style="margin-top:15px">
+        <span class="input-group-addon" id="basic-addon2"></span>
+        <input type="text" class="form-control" style="margin-right: 20px" placeholder="Address Line 1" aria-describedby="basic-addon1" th:field="*{address1}">
+    </div>
+    <div class="input-group" style="margin-top:15px">
+        <span class="input-group-addon" id="basic-addon2"></span>
+        <input type="text" class="form-control" style="margin-right: 20px" placeholder="Address Line 2" aria-describedby="basic-addon1" th:field="*{address2}">
+    </div>
+    <div class="input-group" style="margin-top:15px">
+        <span class="input-group-addon" id="basic-addon2"></span>
+        <input type="text" class="form-control" style="margin-right: 20px" placeholder="City" aria-describedby="basic-addon1" th:field="*{city}">
+        <input type="text" class="form-control" style="margin-right: 20px" placeholder="County" aria-describedby="basic-addon1" th:field="*{county}">
+        <input type="text" class="form-control" style="margin-right: 20px" placeholder="Postcode" aria-describedby="basic-addon1" th:field="*{postCode}">
+    </div>
+    <div style="margin-top:15px">
+        <div class="form-group">
+            <span class="input-group-addon" id="basic-addon2"></span>
+            <label for="genderdropdown">Gender:</label>
+            <select class="form-control" id="genderdropdown" th:field="*{gender}">
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="NON_BIN">Non-binary</option>
+                <option value="PNTS">Prefer not to say</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <span class="input-group-addon" id="basic-addon2"></span>
+            <label for="agedropdown">Age:</label>
+            <select class="form-control" id="agedropdown" th:field="*{age}">
+                <option value="U18">Under 18</option>
+                <option value="INCLUSIVE_18_65">18-65</option>
+                <option value="ABOVE_65">65+</option>
+                <option value="PNTS">Prefer not to say</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <span class="input-group-addon" id="basic-addon2"></span>
+            <label for="ethnicitydropdown">Ethnicity:</label>
+            <select class="form-control" id="ethnicitydropdown" th:field="*{ethnicity}">
+                <option value="WHITE">White</option>
+                <option value="MINORITIES">Black or other ethnic minority</option>
+                <option value="PNTS">Prefer not to say</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <span class="input-group-addon" id="basic-addon2"></span>
+            <label for="disabilitydropdown">Disibility, long-term illness, or health condition:</label>
+            <select class="form-control" id="disabilitydropdown" th:field="*{disibility}">
+                <option value="YES">No</option>
+                <option value="NO">Yes</option>
+                <option value="PNTS">Prefer not to say</option>
+            </select>
+        </div>
+
+    <div/>
+
+
+
+    <a href="/create-client"><button class="btn btn-primary" type="submit">Add Client</button></a>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+</body>

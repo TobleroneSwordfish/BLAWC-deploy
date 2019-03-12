@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:insert="fragments/general.html :: header"/>
+<head>
+    <script src="http://js.nicedit.com/nicEdit-latest.js" type="text/javascript"></script>
+    <script type="text/javascript">bkLib.onDomLoaded(nicEditors.allTextAreas);</script>
+    <meta charset="UTF-8">
+    <title>Sending email</title>
+</head>
+<body>
+<div th:replace="fragments/general.html :: top-bar"></div>
+
+<div class="container">
+    <div class="card">
+        <div class="card-body">
+            <form method="post" th:action="@{/send-email}" th:object="${sendEmail}">
+                <div class="form-group">
+                    <input type="text" th:field="*{subject}"/>
+                    <textarea name="body" th:field="*{body}">Dear sir, I regret to inform you that the late etc etc.</textarea>
+                </div>
+                <div class="form-group" id="addresses">
+                    <input type="text" th:each="address, iter : ${sendEmail.addresses}" th:name="|addresses[${iter.index}]|" th:value="${address}"/>
+                </div>
+                <button type="button">Add recipient</button>
+                <script>
+
+                </script>
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

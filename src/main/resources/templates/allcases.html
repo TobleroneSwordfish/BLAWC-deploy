@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:insert="fragments/general.html :: header"/>
+<head>
+    <title>All Cases</title>
+</head>
+<body>
+
+<div th:replace="fragments/general.html :: top-bar"></div>
+
+<div class="jumbotron text-center" style="margin-bottom:0; height: 100px;">
+    <h1>All Cases</h1>
+</div>
+<div class="container-fluid">
+    <!--<div class="col-sm-3 col-md-2 sidebar">-->
+    <!--<ul class="nav nav-sidebar">-->
+    <!--<li class="active">-->
+    <!--Overview-->
+    <!--</li>-->
+    <!--<li>-->
+    <!--Student-->
+    <!--</li>-->
+    <!--<li>-->
+    <!--Export-->
+    <!--</li>-->
+    <!--</ul>-->
+    <!--</div>-->
+
+    <div class="card">
+        <emphasis class="card-header text-center" style="font-size: 200%;">All cases</emphasis>
+        <div class="card-body p-0" style="width: 90%">
+
+            <!-- <div class="btn-group">
+                <button type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Case Status
+                </button>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="/allcases">Open</a>
+                    <a class="dropdown-item" href="/allcases-closed">Closed</a>
+                </div>
+            </div>-->
+        <div class="row" style="margin-top: 0.5%; margin-left: 5%">
+            <div class="col-md-auto">
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a th:text="${'Case Status'}"></a>
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a th:each="st: ${statuses}" th:href="${'/allcases?status=' + T(ac.uk.bristol.law.clinic.entities.cases.Case.CaseStatus).valueOf(st)}">
+                            <button type="submit" class="dropdown-item"  th:text="${st}";>OPEN</button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-auto">
+            <div class="dropdown" style="width: 10%; margin-left: 15%">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButtonS" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <a th:text="${'Supervisor'}"></a>
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButtonS">
+                    <a th:each="s: ${supervisors}" th:href="${'/allcases?supervisor=' + s.getId()}">
+                        <button type="submit" class="dropdown-item"  th:text="${s.getName()}";></button>
+                    </a>
+                </div>
+            </div>
+            </div>
+            <div class="col-md-auto">
+                <div class="dropdown" style="width: 10%; margin-left: 30%">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButtonSE" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a th:text="${'Case Type'}"></a>
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButtonSE">
+                        <a th:each="w: ${walkthroughs}" th:href="${'/allcases?walkthrough=' + w.getId()}">
+                            <button type="submit" class="dropdown-item"  th:text="${w.getName()}";></button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-auto">
+                <div style="width: 10%; margin-left: 80%">
+                <a href="/allcases"> <button class="btn btn-primary" type="button" >Remove All Filters</button></a>
+                </div>
+
+                </div>
+            </div>
+        </div>
+
+
+
+            <table class="table table-striped table-hover" style="margin-left: 5%; margin-top: 3%">
+                <thead>
+                <th style="width: 20%">Name</th>
+                <th style="width: 20%">#</th>
+                <th style="width: 20%">Supervisor</th>
+                <th style="width: 20%">Assigned</th>
+                <th style="width: 20%">Last action</th>
+                </thead>
+                <tbody>
+                <tr th:each="case: ${sorted}" class="clickable-link" th:attr="data-link=${'/case-display?caseID=' + case.getId()}">
+                    <td th:text="${case.getName()}">Name</td>
+                    <td th:text="${case.getId()}">ID</td>
+                    <td th:text="${case.getSupervisor().getFirstName() + ' ' + case.getSupervisor().getLastName()}">Supervisor</td>
+                    <td th:text="${namesMap[case.getId()]}">
+                    <td th:text="${lastModifiedMap[case.getId()]}">Last modified</td>
+                </tr>
+                </tbody>
+                <script>
+                    $('.collapse').on('show.bs.collapse', function () {
+                        $('.collapse.in').collapse('hide');
+                    });
+                </script>
+                <script th:replace="fragments/general.html :: clickable-script"/>
+                <script th:replace="fragments/general.html :: clickable-script"/>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+</body>

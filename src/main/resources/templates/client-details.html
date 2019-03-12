@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head th:insert="fragments/general.html :: header"></head>
+<head>
+    <title>Client Details</title>
+    <style>
+        .titleJumbotron {
+            margin-bottom: 0;
+            height: 100px;
+        }
+
+        .clickable-styling {
+            text-decoration: underline;
+            color: #007bff;
+        }
+
+        .card-styling {
+            background-color: aliceblue;
+            margin-bottom: 1em;
+        }
+
+        .clickable-styling:hover {
+            color: #0044cc;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+
+
+<div th:replace="fragments/general.html :: top-bar"></div>
+
+<div class="jumbotron text-center titleJumbotron">
+    <h1 th:text="${currentCase}">Default Current Case Name</h1>
+
+</div>
+
+
+<!-- Client Details, Case Steps and Case Files -->
+<div class="container" style="margin-top: 1em;">
+
+            <!-- Client Details -->
+    <div class="card card-styling">
+
+        <div class="card-header text-center">
+            <b>Client Details</b>
+        </div>
+
+        <div class="card-body">
+                <p th:utext="${'<b>Name:</b> ' + client.getFirstName() + ' ' + client.getLastName()}"><b>Name:</b> Default Name (Junior)</p>
+                <p th:utext="${'<b>Address:</b> ' + client.getAddress()}"><b>Address:</b> 1st Default Address, Bristol, BS1 85J</p>
+                <p th:utext="${'<b>Email:</b> ' + client.getEmail()}"><b>Email:</b> defaultClientEmail@gmail.com</p>
+                <p th:utext="${'<b>Telephone:</b> ' + client.getTelephone()}"><b>Telephone:</b> Not specified</p>
+                <p th:utext="${'<b>Gender:</b> ' + client.genderString()}"><b>Gender:</b>Not specified</p>
+                <p th:utext="${'<b>Age:</b> ' + client.ageString()}"><b>Age:</b> Not specified</p>
+                <p th:utext="${'<b>Disbility, long-term illness or health condition:</b> ' + client.disibilityString()}"><b>Disbility Status:</b>Not specified</p>
+                <p th:utext="${'<b>Ethnicity:</b> ' + client.ethnicityString()}"><b>Ethnicity:</b> Not specified </p>
+        </div>
+    </div>
+    <a th:href="|/send-email?address=${client.getEmail()}|"><button type="button" class="btn btn-primary btn-lg">Compose email</button></a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,415 @@
+DROP TABLE IF EXISTS SPRING_SESSION_ATTRIBUTES;
+
+DROP TABLE IF EXISTS SPRING_SESSION;
+
+DROP TABLE IF EXISTS stepdocs;
+
+DROP TABLE IF EXISTS casesteps;
+
+DROP TABLE IF EXISTS actions;
+
+DROP TABLE IF EXISTS cases_steps;
+
+DROP TABLE IF EXISTS cases_clients;
+
+DROP TABLE IF EXISTS documents_users;
+
+DROP TABLE IF EXISTS cases_users;
+
+DROP TABLE IF EXISTS documents;
+
+DROP TABLE IF EXISTS clients;
+
+DROP TABLE IF EXISTS cases;
+
+DROP TABLE IF EXISTS users;
+
+DROP TABLE IF EXISTS walkthroughstepdocs;
+
+DROP TABLE IF EXISTS walkthroughsteps;
+
+DROP TABLE IF EXISTS walkthroughdocs;
+
+DROP TABLE IF EXISTS walkthroughs;
+
+
+
+
+
+CREATE TABLE walkthroughs (
+
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+  name VARCHAR(100) NOT NULL,
+
+  description VARCHAR(1000)
+
+);
+
+CREATE TABLE walkthroughdocs (
+
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+  walkthrough_id BIGINT,
+
+  name VARCHAR(100),
+
+  URL VARCHAR(200),
+
+  FOREIGN KEY (walkthrough_id) REFERENCES walkthroughs (id)
+
+);
+
+
+
+CREATE TABLE walkthroughsteps (
+
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+  name VARCHAR(100) NOT NULL,
+
+  step_number INTEGER,
+
+  walkthrough BIGINT,
+
+  FOREIGN KEY (walkthrough) REFERENCES walkthroughs(id)
+
+);
+
+
+CREATE TABLE walkthroughstepdocs (
+
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+  step_id BIGINT,
+
+  name VARCHAR(100),
+
+  URL VARCHAR(200),
+
+  FOREIGN KEY (step_id) REFERENCES walkthroughsteps(id)
+
+);
+
+
+CREATE TABLE users (
+
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+  first_name VARCHAR(20),
+
+  last_name VARCHAR(20),
+
+  email VARCHAR(60),
+
+  password VARCHAR(100),
+
+  permission INT
+
+);
+
+
+
+CREATE TABLE cases (
+
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+  name VARCHAR(100),
+
+  walkthroughs BIGINT,
+
+  step INTEGER,
+
+  case_status INT,
+
+  supervisor BIGINT,
+
+  FOREIGN KEY (walkthroughs) REFERENCES walkthroughs(id),
+
+  FOREIGN KEY (supervisor) REFERENCES users(id)
+
+);
+
+
+
+CREATE TABLE clients (
+
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+  first_name VARCHAR(20),
+
+  last_name VARCHAR(20),
+
+  email VARCHAR(60),
+
+  address1 VARCHAR(60),
+
+  address2 VARCHAR(60),
+
+  city VARCHAR(60),
+
+  county VARCHAR(60),
+
+  post_code VARCHAR(60),
+
+  telephone VARCHAR(60),
+
+  gender VARCHAR(10),
+
+  age VARCHAR(20),
+
+  ethnicity VARCHAR(20),
+
+  disability VARCHAR(10)
+);
+
+
+
+CREATE TABLE documents (
+
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+  case_id BIGINT,
+
+  name VARCHAR(100),
+
+  URL VARCHAR(200),
+
+  originator BIGINT,
+
+  client_access BOOL,
+
+  FOREIGN KEY (case_id) REFERENCES cases(id),
+
+  FOREIGN KEY (originator) REFERENCES users(id)
+
+);
+
+
+
+CREATE TABLE cases_users (
+
+  cases_users_id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+
+  user_id BIGINT,
+
+  case_id BIGINT,
+
+  time_spent INTEGER,
+
+  FOREIGN KEY  (user_id) REFERENCES users(id),
+
+  FOREIGN KEY (case_id) REFERENCES cases(id)
+
+);
+
+
+
+CREATE TABLE documents_users (
+
+  user_id BIGINT,
+
+  document BIGINT,
+
+  FOREIGN KEY (user_id) REFERENCES users(id),
+
+  FOREIGN KEY (document) REFERENCES documents(id)
+
+);
+
+
+
+CREATE TABLE cases_clients (
+
+  case_id BIGINT,
+
+  client_id BIGINT,
+
+  FOREIGN KEY (case_id) REFERENCES cases(id),
+
+  FOREIGN KEY (client_id) REFERENCES clients(id)
+
+);
+
+CREATE TABLE actions (
+
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+  case_id BIGINT,
+
+  user_id BIGINT,
+
+  FOREIGN KEY (case_id) REFERENCES cases(id),
+
+  FOREIGN KEY (user_id) REFERENCES users(id),
+
+  type VARCHAR(100),
+
+  time TIMESTAMP,
+
+  body VARCHAR(200)
+);
+
+CREATE TABLE casesteps (
+
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+  name VARCHAR(100) NOT NULL,
+
+  step_number INTEGER,
+
+  case_id BIGINT,
+
+  date_complete DATE,
+
+  date_due DATE,
+
+  FOREIGN KEY (case_id) REFERENCES cases(id)
+);
+
+
+CREATE TABLE stepdocs (
+
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+  step_id BIGINT,
+
+  name VARCHAR(100),
+
+  URL VARCHAR(200),
+
+  FOREIGN KEY (step_id) REFERENCES casesteps (id)
+
+);
+
+#
+# CREATE TABLE cases_steps (
+#
+#   cases_steps_id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+#
+#   steps_id BIGINT,
+#
+#   case_id BIGINT,
+#
+#   complete BOOL,
+#
+#   FOREIGN KEY  (steps_id) REFERENCES steps(id),
+#
+#   FOREIGN KEY (case_id) REFERENCES cases(id)
+#
+# );
+
+
+
+
+/*---------------------------TESTING---------------------------*/
+
+
+
+# INSERT INTO walkthroughs
+#
+#     (id , name)
+#
+# VALUES
+#
+#        (0, 'housing dispute');
+
+
+
+# SELECT  concat(
+#
+#           'inserted into walkthroughs: ',
+#
+#           CASE WHEN (SELECT name
+#
+#                      FROM walkthroughs
+#
+#                      WHERE id = 0) = ('housing dispute')
+#
+#                     THEN 'passed' ELSE 'failed' END
+#
+#             );
+CREATE TABLE SPRING_SESSION (
+  PRIMARY_ID CHAR(36) NOT NULL,
+  SESSION_ID CHAR(36) NOT NULL,
+  CREATION_TIME BIGINT NOT NULL,
+  LAST_ACCESS_TIME BIGINT NOT NULL,
+  MAX_INACTIVE_INTERVAL INT NOT NULL,
+  EXPIRY_TIME BIGINT NOT NULL,
+  PRINCIPAL_NAME VARCHAR(100),
+  CONSTRAINT SPRING_SESSION_PK PRIMARY KEY (PRIMARY_ID)
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
+
+
+
+CREATE UNIQUE INDEX SPRING_SESSION_IX1 ON SPRING_SESSION (SESSION_ID);
+CREATE INDEX SPRING_SESSION_IX2 ON SPRING_SESSION (EXPIRY_TIME);
+CREATE INDEX SPRING_SESSION_IX3 ON SPRING_SESSION (PRINCIPAL_NAME);
+
+CREATE TABLE SPRING_SESSION_ATTRIBUTES (
+  SESSION_PRIMARY_ID CHAR(36) NOT NULL,
+  ATTRIBUTE_NAME VARCHAR(200) NOT NULL,
+  ATTRIBUTE_BYTES BLOB NOT NULL,
+  CONSTRAINT SPRING_SESSION_ATTRIBUTES_PK PRIMARY KEY (SESSION_PRIMARY_ID, ATTRIBUTE_NAME),
+  CONSTRAINT SPRING_SESSION_ATTRIBUTES_FK FOREIGN KEY (SESSION_PRIMARY_ID) REFERENCES SPRING_SESSION(PRIMARY_ID) ON DELETE CASCADE
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
+
+
+
+
+
+INSERT INTO users (id, first_name, last_name, email, password, permission) values
+  (1, 'John', 'Smith', 'john.smith@email.com', '$2a$10$Jyg1K3yHzZLM0312oF9XBO2AzSwbq6r/CDttzQLKjEavd4kffWxfS', 1), #Password is Password
+  (2, 'Jane', 'Smith', 'jane.smith@email.com', '$2a$10$Jyg1K3yHzZLM0312oF9XBO2AzSwbq6r/CDttzQLKjEavd4kffWxfS', 0)
+;
+INSERT INTO walkthroughs (id, name) VALUES
+  (1, 'Hedge argument murder'),
+  (2, 'Housing case'),
+  (3, 'International fraud'),
+  (4, 'Benefit case'),
+  (5, 'Data misuse')
+;
+
+#INSERT INTO supervisors(id, name) values
+#                                     (1, 'Supervisor 1'),
+#                                     (2, 'Supervisor 2')
+#;
+
+INSERT INTO cases(id, name, walkthroughs, step, case_status, supervisor) values
+  (1, 'Johnson benefit case', 4, 0, 0, 1),
+  (2, 'Cambridge analytica', 5, 0, 1, 2)
+;
+INSERT INTO clients (id, first_name, last_name, email, address1, address2, city, county, post_code, telephone, gender, age, ethnicity, disability) VALUES
+  (1, 'Adam', 'Johnson', 'adam.johnson@email.com', '1', 'Park street', 'Bristol', 'Bristol', 'BS1 3DS', '0800 03748', 'MALE', 'U18', 'WHITE', 'PNTS'),
+  (2, 'Emma', 'Erikson', 'emma.erikson@email.com', '1', 'Park row', 'Bristol', 'Bristol', 'BS1 2BS', '0800 09238', 'FEMALE', 'ABOVE_65', 'MINORITIES', 'NO')
+;
+INSERT INTO cases_users (cases_users_id, user_id, case_id, time_spent) VALUES
+  (1, 1, 1, 20),
+  (2, 2, 1, 0),
+  (3, 2, 2, 40)
+;
+INSERT INTO cases_clients (case_id, client_id) VALUES
+  (1, 1),
+  (2, 2)
+;
+INSERT INTO walkthroughsteps (name, step_number, walkthrough) VALUES
+  ('Contact client', 1, 4),
+  ('Contact government', 2, 4),
+  ('Final step', 3, 4)
+;
+
+INSERT INTO casesteps (name, step_number, case_id) VALUES
+  ('Contact client', 1, 1),
+  ('Contact government', 2, 1),
+  ('Final step', 3, 1)
+;
+
+INSERT INTO walkthroughstepdocs (step_id, name, URL) VALUES
+  (1, 'Expense Claim Form.pdf', '/case/1/step/1/Expense Claim Form.pdf')
+;
+
+INSERT INTO stepdocs (step_id, name, URL) VALUES
+  (1, 'Expense Claim Form.pdf', '/case/1/step/1/Expense Claim Form.pdf')
+;
+
+

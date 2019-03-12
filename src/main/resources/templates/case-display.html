@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head th:insert="fragments/general.html :: header"></head>
+<head>
+    <script type="text/javascript" src="https://addevent.com/libs/atc/1.6.1/atc.min.js" async defer></script>
+    <title>Case Display</title>
+    <!--If you can put css in a separate file that'd be great :)-->
+    <!--<link th:href="@{/css/main.css}" rel="stylesheet">-->
+    <style>
+        .titleJumbotron {
+            margin-bottom: 0;
+            height: 100px;
+        }
+
+        .clickable-styling {
+            text-decoration: underline;
+            color: #007bff;
+        }
+
+        .card-styling {
+            background-color: aliceblue;
+            margin-bottom: 1em;
+        }
+
+        .clickable-styling:hover {
+            color: #0044cc;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+
+
+<div th:replace="fragments/general.html :: top-bar"></div>
+
+<div class="jumbotron text-center titleJumbotron">
+    <h1 th:text="${currentCase}">Default Current Case Name</h1>
+    <!--<form method="delete" action="case-edit/delete">-->
+    <!--<p class="submit">-->
+    <!--<input type="submit"/>-->
+    <!--</p>-->
+    <!--</form>-->
+</div>
+
+<!-- OPTIONAL : Nav to jump to sections of the case. -->
+<!-- I commented this out because it isn't really necessary, only for cases which have > 20 steps.
+<div class="container" style="margin-top: 1em;">
+    <ul class="nav justify-content-center">
+        <li class="nav-item">
+            <a class="nav-link" href="#">Client Details</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">Case Lawyers</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">Case Steps</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">Case Files</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">Activity Log</a>
+        </li>
+    </ul>
+</div>
+-->
+
+<!-- Client Details, Case Steps and Case Files -->
+<div class="container" style="margin-top: 1em;">
+
+    <!--Case steps row-->
+    <div class="row">
+        <!-- Case Steps, Case Files, Activity Log-->
+        <div class="col-lg-12">
+            <!-- Case Steps -->
+            <div class="card card-styling">
+                <div class="card-header text-center">
+                    <b>Case Steps</b>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover" style="border-collapse:collapse;">
+                        <thead>
+                        <tr class="text-center">
+                            <th>Step Description</th>
+                            <th>Due Date</th>
+                            <th>Completion Date</th>
+                            <th>Save</th>
+                            <th>Step Files</th>
+                            <th>Calendar</th>
+
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <div th:each="step, iter : ${caseSteps}">
+                                <tr >
+                                    <form method="POST" enctype="multipart/form-data" th:action="@{set-step-date(stepID=${step.getId()})}">
+                                        <td >
+                                            <p style="display:inline" th:text="${step.getName()}">Debug default</p>
+                                            <small class="clickable clickable-styling" data-toggle="collapse" th:attr="data-target=${'.step' + step.getId()}">See associated files. </small>
+                                        </td>
+                                        <td>
+                                            <input class="form-control" type="date" name="dueDate" th:value="${step.getDateDueString()}"/>
+                                        </td>
+                                        <td>
+                                            <input class="form-control" type="date"  name="completionDate" th:value="${step.getDateCompleteString()}"/>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-secondary" type="submit">Update</button>
+                                        </td>
+                                        <!--Upload a case file-->
+                                    </form>
+
+                                    <td>
+                                        <!--<p class="text-center"><b>Upload Case Step File</b></p>-->
+                                        <form method="POST" enctype="multipart/form-data" action="#" th:action="${'/files/case/' + caseID + '/step/' + (iter.index + 1).toString()}">
+                                            <div class="form-group text-center">
+                                                <input type="file" name=file class="form-control-file" id="caseFileInputUpload"></input>
+                                                <!--<label for="caseFileInputUpload" style="padding-top: 0.5em; color: grey;">Click 'Choose File' to select a file.</label>-->
+                                                <button type="submit" class="btn btn-primary" style="margin-top: 0.5em;">Upload</button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <div title="Add to Calendar" class="addeventatc">
+                                            Add to Calendar
+                                            <span class="start" th:text="${step.getDateDueString() + ' 12:00 PM'}"></span>
+                                            <span class="end" th:text="${step.getDateDueString() + ' 1:00 PM'}"></span>
+                                            <span class="timezone">Europe/London</span>
+                                            <span class="title" th:text="${step.getName()}"></span>
+                                            <span class="description" th:text="${step.getConcreteCase().getName()}"></span>
+                                        </div>
+                                    </td>
+
+                                </tr>
+                                <tr>
+                                    <td colspan="4" th:each="doc : ${step.getDocs()}" class="hiddenRow" style="padding: 0 !important;">
+                                        <div class="collapse clickable-link" th:text="${doc.getName()}" th:classappend="${'step' + step.getId()}" th:attr="data-link=${'files' + doc.getUrl()}"></div>
+                                    </td>
+                                </tr>
+                            </div>
+
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- End of Case Steps, Case Files, Activity Log -->
+    </div>
+
+    <!--Case files row-->
+    <div class="row">
+        <!-- Case Files (Up to 10, on average)-->
+        <div class="col-lg-12">
+            <div class="card card-styling">
+                <div class="card-header text-center">
+                    <b>Case Files</b>
+                </div>
+                <div class="card-body">
+                    <!-- Upload a new file. -->
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <p class="text-center"><b>Upload a New File</b></p>
+                            <form method="POST" enctype="multipart/form-data" action="#" th:action="${'/files/case/' + caseID}">
+                                <div class="form-group text-center">
+                                    <input type="file" name=file class="form-control-file" id="fileInputUpload"></input>
+                                    <label for="fileInputUpload" style="padding-top: 0.5em; color: grey;">Click 'Choose File' to select a file.</label>
+                                    <button type="submit" class="btn btn-primary" style="margin-top: 0.5em;">Upload</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Display a list of uploaded files. -->
+                        <div class="col-lg-8">
+                            <table class="table">
+                                <tbody>
+                                <tr class="clickable-link" th:each="doc :${caseDocs}" th:attr="data-link=${'/files' + doc.getUrl()}">
+                                    <td th:text="${doc.getName()}" class="clickable-styling">ClientDetailsExtended.docx</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Client details and case lawyers row-->
+    <div class="row">
+        <!-- Client Details, Case Lawyers, Admin Panel -->
+        <div class="col-lg-6">
+            <!-- Client Details -->
+            <div class="card card-styling">
+
+                <div class="card-header text-center">
+                    <b>Client Details</b>
+                </div>
+
+                <div class="card-body">
+                    <div th:each="client: ${currentClient}" class="clickable-link card" th:attr="data-link=${'/client-details?clientID=' + client.getId()}">
+                        <p th:utext="${'<b>Name:</b> ' + client.getFirstName() + ' ' + client.getLastName()}"><b>Name:</b> Default Name (Junior)</p>
+                        <p th:utext="${'<b>Address:</b> ' + client.getAddress()}"><b>Address:</b> 1st Default Address, Bristol, BS1 85J</p>
+                        <p th:utext="${'<b>Email:</b> ' + client.getEmail()}"><b>Email:</b> defaultClientEmail@gmail.com</p>
+                    </div>
+                    <a th:href="${'/send-email?address=' + clientEmails}"><button type="button button-primary">Email all clients</button></a>
+                </div>
+            </div>
+        </div>
+            <!-- Case Lawyers -->
+        <div class="col-lg-6">
+            <div class="card card-styling">
+                <div class="card-header text-center">
+                    <b>Case Lawyers</b>
+                </div>
+
+                <div class="card-body">
+                    <div th:each="user: ${assignees}">
+                        <p th:utext="${'<b>Name:</b> ' +user.getFirstName() + ' ' + user.getLastName()}";><b>Name:</b> Johnathonamon Grimes</p>
+                        <p th:utext="${'<b>Email:</b> ' + user.getEmail()}"><b>Email:</b> testemail9000@somelawfirm.com</p>
+                        <hr>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!--Admin panel row (centred)-->
+    <div class="row">
+        <!-- Admin Panel -->
+        <div class="col-lg-3"></div>
+        <div class="card card-styling col-lg-6" sec:authorize="hasRole('ROLE_ADMIN')">
+
+            <div class="card-header text-center">
+                <b>Admin Panel</b>
+            </div>
+
+            <div class="text-center card-body">
+                <row>
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a th:text="${'Case Status:' + ' ' + status}">Case Status : OPEN</a>
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <form method="post" th:each="st: ${statuses}" th:action="${'/case-display?caseID=' + caseID + '&setStatus=' + T(ac.uk.bristol.law.clinic.entities.cases.Case.CaseStatus).valueOf(st)}">
+                            <button type="submit" class="dropdown-item"  th:text="${st}";>OPEN</button>
+                        </form>
+                    </div>
+                </div>
+                <a th:href="${'/confirm-delete?caseID=' + caseID}" ><button type="button" class="btn btn-secondary">Delete Case</button></a>
+                </row>
+            </div>
+        </div>
+        <div class="col-lg-3"></div>
+
+    </div>
+
+    <!--Activity log row-->
+    <div class="row">
+        <!-- Activity Log -->
+        <div class="col-lg-12 card card-styling">
+            <div class="card-header text-center">
+                <b>Activity Log</b>
+            </div>
+            <div class="card-body">
+                <div class="table-wrapper-scroll-y">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                        <tr>
+                            <th scope="col">Date & Time</th>
+                            <th scope="col">User</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="action: ${actions}">
+                            <td th:text="${action.getTime()}">01/01/01, 15:05</td>
+                            <td th:text="${action.getUser().getUsername()}">Username</td>
+                            <td th:text="${action.getDescription()}">Updated Due Date from 01/01/01 to 02/02/02.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $('.collapse').on('show.bs.collapse', function () {
+            $('.collapse.in').collapse('hide');
+        });
+    </script>
+    <script th:replace="fragments/general.html :: clickable-script"></script>
+</div>
+
+
+<!--</div>-->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+</body>
+</html>

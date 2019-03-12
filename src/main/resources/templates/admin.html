@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:insert="fragments/general.html :: header"/>
+<head>
+    <title>Admin</title>
+</head>
+<body>
+
+<div th:replace="fragments/general.html :: top-bar"></div>
+
+<div class="jumbotron text-center" style="margin-bottom:0; height: 100px;">
+    <h1>Admin</h1>
+</div>
+<div class="text-center">
+    <a href="/allcases" ><button type="button" class="btn btn-primary btn-lg">All Cases</button></a>
+    <a href="/casetype-creation" ><button type="button" class="btn btn-primary btn-lg">New Case Type</button></a>
+    <a href="/create-user"><button type="button" class="btn btn-primary btn-lg">Create user account</button></a>
+</div>
+</body>
