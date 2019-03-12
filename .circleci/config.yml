@@ -1,7 +1,7 @@
 version: 2
 jobs:
   - build
-  deploy:
+  - deploy:
     machine:
       enabled: true
     steps:
