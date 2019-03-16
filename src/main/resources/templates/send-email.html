@@ -14,16 +14,26 @@
     <div class="card">
         <div class="card-body">
             <form method="post" th:action="@{/send-email}" th:object="${sendEmail}">
-                <div class="form-group">
-                    <input type="text" th:field="*{subject}"/>
-                    <textarea name="body" th:field="*{body}">Dear sir, I regret to inform you that the late etc etc.</textarea>
+
+
+                <div class="form-group" style="width: 100%">
+                    <input style="width: 50%;" type="text" th:field="*{subject}"/>
+                    <textarea style="width: 100%; height: 60%;" name="body" th:field="*{body}">Dear sir, I regret to inform you that the late etc etc.</textarea>
                 </div>
+
+
                 <div class="form-group" id="addresses">
                     <input type="text" th:each="address, iter : ${sendEmail.addresses}" th:name="|addresses[${iter.index}]|" th:value="${address}"/>
                 </div>
-                <button type="button">Add recipient</button>
-                <script>
 
+
+                <button type="button" id="add-recipient">Add recipient</button>
+                <script>
+                    jQuery(document).ready(function($) {
+                        $("#add-recipient").click(function() {
+                            $("#addresses").append("<input type='text' name='addresses[" + $("#addresses > input").length + "]'/>")
+                        });
+                    });
                 </script>
                 <button type="submit">Send</button>
             </form>

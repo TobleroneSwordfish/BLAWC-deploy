@@ -175,7 +175,7 @@ public class Case implements Serializable {
     }
 
     //overload with supervisor
-    public Case(String name, Walkthrough walkthrough, Set<Client> clients, Set<User> lawyers, User supervisor)
+    public Case(String name, Walkthrough walkthrough, Set<Client> clients, Set<User> lawyers, Optional<User> supervisor)
     {
         this.name = name;
         this.walkthrough = walkthrough;
@@ -185,7 +185,9 @@ public class Case implements Serializable {
             l.addCase(this);
         }
         this.step = 0;
-        this.supervisor = supervisor;
+        if (supervisor.isPresent()){
+            this.supervisor = supervisor.get();
+        }
     }
 
     //retrieve case

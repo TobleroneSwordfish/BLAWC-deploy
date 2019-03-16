@@ -1,12 +1,12 @@
 package ac.uk.bristol.law.clinic.controllers;
 
-import ac.uk.bristol.law.clinic.*;
+import ac.uk.bristol.law.clinic.ControllerUtils;
 import ac.uk.bristol.law.clinic.DTO.*;
-import ac.uk.bristol.law.clinic.entities.*;
+import ac.uk.bristol.law.clinic.entities.Action;
+import ac.uk.bristol.law.clinic.entities.Client;
+import ac.uk.bristol.law.clinic.entities.User;
 import ac.uk.bristol.law.clinic.entities.cases.Case;
 import ac.uk.bristol.law.clinic.entities.cases.CaseStep;
-import ac.uk.bristol.law.clinic.entities.Documents;
-import ac.uk.bristol.law.clinic.entities.cases.StepDocs;
 import ac.uk.bristol.law.clinic.entities.walkthroughs.Walkthrough;
 import ac.uk.bristol.law.clinic.entities.walkthroughs.WalkthroughStep;
 import ac.uk.bristol.law.clinic.repositories.*;
@@ -663,7 +663,7 @@ public class WebController {
 
             //User supervisor = user;
 
-            Case newCase = new Case(caseName, caseWalkthrough, clientSet, userSet, supervisor);
+            Case newCase = new Case(caseName, caseWalkthrough, clientSet, userSet, Optional.of(supervisor));
             this.caseRepository.save(newCase);
             Action action = new Action(Action.ActionType.CREATE_CASE, user, newCase);
             actionRepository.save(action);
