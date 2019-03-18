@@ -2,8 +2,7 @@
 <html lang="en">
 <head th:insert="fragments/general.html :: header"/>
 <head>
-    <script src="http://js.nicedit.com/nicEdit-latest.js" type="text/javascript"></script>
-    <script type="text/javascript">bkLib.onDomLoaded(nicEditors.allTextAreas);</script>
+    <script th:src="@{/js/nicEdit.js}" type="text/javascript"></script>
     <meta charset="UTF-8">
     <title>Sending email</title>
 </head>
@@ -13,20 +12,20 @@
 <div class="container">
     <div class="card">
         <div class="card-body">
-            <form method="post" th:action="@{/send-email}" th:object="${sendEmail}">
+            <form method="post" th:action="@{/send-email}" th:object="${sendEmail}" id="form">
 
-
+                <label for="subject">Subject</label>
                 <div class="form-group" style="width: 100%">
-                    <input style="width: 50%;" type="text" th:field="*{subject}"/>
-                    <textarea style="width: 100%; height: 60%;" name="body" th:field="*{body}">Dear sir, I regret to inform you that the late etc etc.</textarea>
+                    <input style="width: 50%;" type="text" id="subject" th:field="*{subject}"/>
                 </div>
-
-
+                <textarea style="width: 100%; height: 60%;" name="body" th:field="*{body}" id="body"></textarea>
+                <label for="addresses">To:</label>
                 <div class="form-group" id="addresses">
                     <input type="text" th:each="address, iter : ${sendEmail.addresses}" th:name="|addresses[${iter.index}]|" th:value="${address}"/>
                 </div>
-
-
+                <script>
+                    var editor = new nicEditor({iconsPath : '/resources/nicEditorIcons.gif'}).panelInstance('body',{hasPanel : true});
+                </script>
                 <button type="button" id="add-recipient">Add recipient</button>
                 <script>
                     jQuery(document).ready(function($) {

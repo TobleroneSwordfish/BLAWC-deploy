@@ -18,6 +18,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 
@@ -54,6 +55,9 @@ public class DbDevelopmentSpringApplicationTests {
     @Autowired
     CaseStepRepository concretecasestepreopository;
 
+    @Autowired
+    ActionRepository actionRepository;
+
     @Test
     public void trueCase() {    // test saving to the database
         assert(true);
@@ -66,7 +70,7 @@ public class DbDevelopmentSpringApplicationTests {
         walkthroughRepository.save(walkthrough1);
         User johnPeake = new User("John", "Peake", "john@Peake.com", "1234", User.PermissionLevel.Admin);
         userRepository.save(johnPeake);
-        Case dummyCase = new Case("dummyCase", walkthrough1, new HashSet<Client>(), new HashSet<User>(), johnPeake);
+        Case dummyCase = new Case("dummyCase", walkthrough1, new HashSet<Client>(), new HashSet<User>(), Optional.of(johnPeake));
         casesRepository.save(dummyCase);
 //        List<Case> cases = new ArrayList<>();
 //        cases.add(dummyCase);
@@ -151,7 +155,7 @@ public class DbDevelopmentSpringApplicationTests {
         Walkthrough walkthroughA = new Walkthrough("WalkthroughA");
         walkthroughRepository.save(walkthroughA);
 
-        Case caseA = new Case("RobberyCase", walkthroughA, new HashSet<Client>(), new HashSet<User>());
+        Case caseA = new Case("RobberyCase", walkthroughA, new HashSet<Client>(), new HashSet<User>(), Optional.empty());
         casesRepository.save(caseA);
 
 //        System.out.println(casesRepository.findById(caseA.getId()).get().getWalkthrough().getName());
@@ -166,7 +170,7 @@ public class DbDevelopmentSpringApplicationTests {
         Walkthrough walkthrough3 = new Walkthrough("Walkthrough3");
         walkthroughRepository.save(walkthrough3);
 
-        Case CaseA = new Case("dummyCase", walkthrough3, new HashSet<Client>(), new HashSet<User>());
+        Case CaseA = new Case("dummyCase", walkthrough3, new HashSet<Client>(), new HashSet<User>(), Optional.empty());
         casesRepository.save(CaseA);
 
         Client ClientA = new Client("John", "Peake", "johnpeake@email.com", new String[]{"UK", "Bristol", "Bristol", "Avon", "h"}, "07712222222");
@@ -190,7 +194,7 @@ public class DbDevelopmentSpringApplicationTests {
 
         User LawyerB = new User("Tim", "Peake", "timpeake@email.com", "1234", User.PermissionLevel.Admin);
         userRepository.save(LawyerB);
-        Case CaseB = new Case("MuderCase", Walkthrough3, new HashSet<Client>(), new HashSet<User>());
+        Case CaseB = new Case("MuderCase", Walkthrough3, new HashSet<Client>(), new HashSet<User>(), Optional.empty());
         casesRepository.save(CaseB);
 
 
@@ -253,7 +257,7 @@ public class DbDevelopmentSpringApplicationTests {
         Walkthrough somewalkthrough = new Walkthrough("somewalkthrough");
         walkthroughRepository.save(somewalkthrough);
 
-        Case alsHousing = new Case("als Housing case", somewalkthrough, new HashSet<Client>(), new HashSet<User>());
+        Case alsHousing = new Case("als Housing case", somewalkthrough, new HashSet<Client>(), new HashSet<User>(), Optional.empty());
         casesRepository.save(alsHousing);
 
         Client Al = new Client("Al", "zing", "alzing@email.com", new String[]{"UK", "Bristol", "Bristol", "Avon", "y"}, "07712222222");
@@ -277,7 +281,7 @@ public class DbDevelopmentSpringApplicationTests {
 
         User LawyerB = new User("Tim", "Peake", "timpeake@email.com", "1234", User.PermissionLevel.Admin);
         userRepository.save(LawyerB);
-        Case CaseB = new Case("MuderCase", Walkthrough3, new HashSet<Client>(), new HashSet<User>());
+        Case CaseB = new Case("MuderCase", Walkthrough3, new HashSet<Client>(), new HashSet<User>(), Optional.empty());
         casesRepository.save(CaseB);
 
 
@@ -298,10 +302,10 @@ public class DbDevelopmentSpringApplicationTests {
 
         User LawyerB = new User("Tim", "Peake", "timpeake@email.com", "1234", User.PermissionLevel.Admin);
         userRepository.save(LawyerB);
-        Case CaseB = new Case("MuderCase", Walkthrough3, new HashSet<Client>(), new HashSet<User>());
+        Case CaseB = new Case("MuderCase", Walkthrough3, new HashSet<Client>(), new HashSet<User>(),Optional.empty());
         casesRepository.save(CaseB);
 
-        Case CasesC = new Case("CaseC", Walkthrough3, new HashSet<Client>(), new HashSet<User>());
+        Case CasesC = new Case("CaseC", Walkthrough3, new HashSet<Client>(), new HashSet<User>(), Optional.empty());
         casesRepository.save(CasesC);
 
 
@@ -349,7 +353,7 @@ public class DbDevelopmentSpringApplicationTests {
         walkthroughRepository.save(walkthroughexample);
         stepsRepository.save(stepA);
 
-        Case CaseA = new Case("Toolbox_Stolen_Case", walkthroughexample, new HashSet<Client>(), new HashSet<User>());
+        Case CaseA = new Case("Toolbox_Stolen_Case", walkthroughexample, new HashSet<Client>(), new HashSet<User>(), Optional.empty());
         casesRepository.save(CaseA);
 
 
@@ -372,7 +376,7 @@ public class DbDevelopmentSpringApplicationTests {
         Walkthrough walkthroughExample = new Walkthrough("Example");
         walkthroughRepository.save(walkthroughExample);
 
-        Case caseA = new Case("John_stole_toolbox", walkthroughExample, new HashSet<Client>(), new HashSet<User>());
+        Case caseA = new Case("John_stole_toolbox", walkthroughExample, new HashSet<Client>(), new HashSet<User>(), Optional.empty());
         caseA.addClient(clientA);
         casesRepository.save(caseA);
 
@@ -390,7 +394,7 @@ public class DbDevelopmentSpringApplicationTests {
     public void casesDocsOnetoMany(){
         User law = new User("hel", "lno", "@email", "1234", User.PermissionLevel.Admin);
         Walkthrough walk = new Walkthrough("walk");
-        Case caseex = new Case("case1", walk, new HashSet<Client>(), new HashSet<User>());
+        Case caseex = new Case("case1", walk, new HashSet<Client>(), new HashSet<User>(), Optional.empty());
         Documents doc = new Documents("doc", true, law, "www...");
         doc.setCaseowner(caseex);
         casesRepository.save(caseex);
@@ -464,7 +468,7 @@ public class DbDevelopmentSpringApplicationTests {
         walkthroughRepository.save(walkthroughA);
         User johnPeake = new User("John", "Peake", "john@Peake.com", "1234", User.PermissionLevel.Admin);
         userRepository.save(johnPeake);
-        Case caseA = new Case("casea",walkthroughA , new HashSet<Client>(), new HashSet<User>(), johnPeake);
+        Case caseA = new Case("casea",walkthroughA , new HashSet<Client>(), new HashSet<User>(), Optional.of(johnPeake));
         casesRepository.save(caseA);
 
         CaseStep stepA = new CaseStep("Step1", 3, caseA);
@@ -475,6 +479,17 @@ public class DbDevelopmentSpringApplicationTests {
         assert(concretecasestepreopository.findById(stepA.getId()).get().getDateComplete() != null);
         assert(concretecasestepreopository.findById(stepA.getId()).get().getDateDue() == null);
         assert(concretecasestepreopository.existsById(stepA.getId()));
+    }
+
+    @Test
+    public void  actionCaseTest(){
+        User user = new User();
+        userRepository.save(user);
+        Case newCase = new Case();
+        casesRepository.save(newCase);
+        Action action = new Action(Action.ActionType.ADD_STEP, user, newCase);
+        actionRepository.save(action);
+//        assert(casesRepository.findById(newCase.getId()).get().getActions(actionRepository).contains(action));
     }
 
 }

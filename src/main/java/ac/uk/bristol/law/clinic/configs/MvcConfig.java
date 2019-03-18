@@ -7,6 +7,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Properties;
@@ -28,6 +29,16 @@ public class MvcConfig implements WebMvcConfigurer
         javaMailSender.setUsername("blawctestemail@gmail.com");
         javaMailSender.setPassword("testemail");
         return javaMailSender;
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry
+                .addResourceHandler("/resources/**")
+                .addResourceLocations("/resources/");
+        registry
+                .addResourceHandler("/js/**")
+                .addResourceLocations("/js/");
     }
 
     //allows dots in path variables without truncation

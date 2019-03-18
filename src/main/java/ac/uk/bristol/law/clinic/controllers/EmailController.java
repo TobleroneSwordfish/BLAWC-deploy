@@ -41,7 +41,7 @@ public class EmailController
     public void postMapping(@ModelAttribute SendEmail sendEmail)
     {
         System.out.println("Post mapping called");
-        System.out.println(sendEmail);
+        System.out.println(sendEmail.getBody());
         MimeMessage msg = mailSender.createMimeMessage();
         //SimpleMailMessage msg = new SimpleMailMessage();
         try
