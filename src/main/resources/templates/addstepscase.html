@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:insert="fragments/general.html :: header"/>
+
+
+<body>
+<div th:replace="fragments/general.html :: top-bar"></div>
+
+<div class="jumbotron text-center" style="margin-bottom:0; height: 100px;">
+    <h1 class="col" th:text="'Add Steps: ' + ${name}"></h1>
+</div>
+
+<!--add a step-->
+<form th:action="${'/addstepscase?caseID=' + caseID}" th:object="${stepCreation}" method="post">
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label for="stepname">Name</label>
+            <input type="text" class="form-control" id="stepname" placeholder="Step Name" th:field="*{name}">
+        </div>
+        <div class="form-group col-md-6">
+            <label for="stepnumber">Step Number</label>
+            <input type="text" class="form-control" id="stepnumber" th:value="${nosteps}" th:field="*{number}">
+        </div>
+    </div>
+
+
+    <button type="submit" class="btn btn-primary">Add</button>
+</form>
+
+<!--display current steps-->
+<div class="card"style="background-color: aliceblue; width: 15%; margin-left: 2%; margin-top: 2%; margin-right: 2%">
+    <div class="card-header text-center"><b>Current Steps:</b></div>
+    <h3 th:each="step: ${currentSteps}">
+        <h5 th:text="${'Name: ' + step.getName()}";></h5>
+        <h5 th:text="${'Step number: ' + step.getStepNumber()}";></h5>
+    </h3>
+</div>
+
+</body>
+</html>

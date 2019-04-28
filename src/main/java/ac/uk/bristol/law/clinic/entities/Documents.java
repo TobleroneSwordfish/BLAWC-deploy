@@ -1,7 +1,9 @@
 package ac.uk.bristol.law.clinic.entities;
 import ac.uk.bristol.law.clinic.entities.User;
 import ac.uk.bristol.law.clinic.entities.cases.Case;
+import ac.uk.bristol.law.clinic.entities.walkthroughs.WalkthroughDocs;
 import ac.uk.bristol.law.clinic.repositories.UserRepository;
+import ac.uk.bristol.law.clinic.services.FileStorageService;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -78,6 +80,15 @@ public class Documents {
         this.url = url;
         this.clientAccess = clientAccess;
         this.originator = originator;
+    }
+    public Documents(WalkthroughDocs doc, boolean clientAccess, User originator, FileStorageService fileStorageService)
+    {
+        this.name = doc.getName();
+        this.url = doc.getUrl();
+        this.clientAccess = clientAccess;
+        this.originator = originator;
+        String newPath = "/case/" + caseowner.getId() + "/" + name;
+        fileStorageService.cloneFile(doc.getUrl(), name, newPath, name);
     }
 
     public Documents() {}

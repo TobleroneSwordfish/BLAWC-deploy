@@ -14,6 +14,17 @@ public class FileStorageService
 {
     private Path basePath;
 
+    //just cuts the filename off a path
+    public static String cutFilename(String path)
+    {
+        int i = path.length() - 1;
+        while (path.charAt(i) != '/')
+        {
+            i--;
+        }
+        return path.substring(0, i + 1);
+    }
+
     public File getFile(String pathString)
     {
         Path fullPath = basePath.resolve(pathString);
@@ -30,6 +41,7 @@ public class FileStorageService
         }
     }
 
+    //path does not include filename
     public void storeFile(String pathString, InputStream instream, String fileName) throws IOException
     {
         //directory doesn't exist
@@ -51,6 +63,52 @@ public class FileStorageService
         {
             System.out.println(e.getMessage());
             throw new IOException(e);
+        }
+    }
+
+    //todo
+    public void deleteFile(String path, String filename)
+    {
+        if (basePath.resolve(path).resolve(filename).toFile().exists())
+        {
+
+        }
+        else
+        {
+            System.out.println();
+        }
+    }
+
+    public void cloneFile(String path, String filename, String newPath, String newFilename)
+    {
+        System.out.println("Cloning file " + filename +" from " + path + " to " + newPath);
+        try
+        {
+            path = path.substring(1); //don't question it
+            newPath = newPath.substring(1); //they come with "/"s on the front, and .resolve goes full linux and treats that as an absolute path
+            File file = basePath.resolve(path).resolve(filename).toFile();
+            System.out.println("old file: " + file);
+            System.out.println("file exists: " + file.exists());
+            System.out.println("file is file: " + file.isFile());
+            if (file.exists() && file.isFile())
+            {
+                Path pathVar = basePath.resolve(newPath).resolve(newFilename);
+                basePath.resolve(newPath).toFile().mkdirs();
+                File newFile = pathVar.toFile();
+                System.out.println("new file: " + newFile);
+                OutputStream outstream = new FileOutputStream(newFile);//output stream to desired file
+                InputStream instream = new FileInputStream(file); //read from old file
+                int c;
+                while ((c = instream.read()) != -1) {
+                    outstream.write(c);
+                }
+                outstream.close();
+                instream.close();
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println(e);
         }
     }
 

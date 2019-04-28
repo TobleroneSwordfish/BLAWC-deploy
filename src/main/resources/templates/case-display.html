@@ -6,27 +6,7 @@
     <title>Case Display</title>
     <!--If you can put css in a separate file that'd be great :)-->
     <!--<link th:href="@{/css/main.css}" rel="stylesheet">-->
-    <style>
-        .titleJumbotron {
-            margin-bottom: 0;
-            height: 100px;
-        }
-
-        .clickable-styling {
-            text-decoration: underline;
-            color: #007bff;
-        }
-
-        .card-styling {
-            background-color: aliceblue;
-            margin-bottom: 1em;
-        }
-
-        .clickable-styling:hover {
-            color: #0044cc;
-            cursor: pointer;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="/css/sheet.css">
 </head>
 
 
@@ -141,7 +121,11 @@
 
 
                         </tbody>
+
                     </table>
+
+                    <a th:href="${'/addstepscase?caseID=' + caseID}" ><button type="button" class="btn btn-primary">Add Step</button></a>
+
                 </div>
             </div>
         </div>
@@ -207,6 +191,25 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-lg-6">
+            <!-- Client Details -->
+            <div class="card card-styling">
+
+                <div class="card-header text-center">
+                    <b>Supervisor</b>
+                </div>
+
+                <div class="card-body">
+                    <div>
+                        <p th:utext="${'<b>Name:</b> ' + supervisor.getFirstName() + ' ' + supervisor.getLastName()}"><b>Name:</b> Default Name (Junior)</p>
+                        <p th:utext="${'<b>Email:</b> ' + supervisor.getEmail()}"><b>Email:</b> defaultClientEmail@gmail.com</p>
+                    </div>
+                    <a th:href="${'/send-email?address=' + supervisor.getEmail()}"><button type="button button-primary">Email Supervisor</button></a>
+                </div>
+            </div>
+        </div>
+
             <!-- Case Lawyers -->
         <div class="col-lg-6">
             <div class="card card-styling">
@@ -218,8 +221,10 @@
                     <div th:each="user: ${assignees}">
                         <p th:utext="${'<b>Name:</b> ' +user.getFirstName() + ' ' + user.getLastName()}";><b>Name:</b> Johnathonamon Grimes</p>
                         <p th:utext="${'<b>Email:</b> ' + user.getEmail()}"><b>Email:</b> testemail9000@somelawfirm.com</p>
+                        <a sec:authorize="hasRole('ROLE_ADMIN')"  th:href="${'/confirm-delete-lawyer?caseID=' + caseID + '&lawyerID=' + lawyerID}" ><button sec:authorize="hasRole('ROLE_ADMIN')" type="button" class="btn btn-secondary">Remove Lawyer</button></a>
                         <hr>
                     </div>
+                    <a th:href="${'/send-email?address=' + lawyerEmails}"><button type="button button-primary">Email all lawyers</button></a>
                 </div>
             </div>
         </div>
@@ -249,6 +254,8 @@
                     </div>
                 </div>
                 <a th:href="${'/confirm-delete?caseID=' + caseID}" ><button type="button" class="btn btn-secondary">Delete Case</button></a>
+                <a th:href="${'/add-lawyer?caseID=' + caseID}"><button type="button" class="btn btn-secondary">Add Lawyer</button> </a>
+                    <a th:href="${'/add-client?caseID=' + caseID}"><button type="button" class="btn btn-secondary">Add Client</button> </a>
                 </row>
             </div>
         </div>

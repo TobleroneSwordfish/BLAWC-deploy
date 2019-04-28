@@ -27,4 +27,10 @@ public class LawClinicApplicationTests {
 		fileStore.storeFile("testdest/folder", IOUtils.toInputStream("some test data for my input stream", "UTF-8"), "testFile");
 		assert (fileStore.fileExists("testdest/folder/testFile"));
 	}
+
+	@Test
+	public void cutFilenameTest() throws IOException {
+		System.out.println(FileStorageService.cutFilename("/testdest/folder/testFile"));
+		assert (FileStorageService.cutFilename("/testdest/folder/testFile").equals("/testdest/folder/"));
+	}
 }

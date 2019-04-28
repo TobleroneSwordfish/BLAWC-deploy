@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head th:insert="fragments/general.html :: header"></head>
 <head>
-    <title>Delete Case</title>
+    <title>Delete Walkthrough</title>
     <link rel="stylesheet" type="text/css" href="/css/sheet.css">
 </head>
 
@@ -16,14 +16,14 @@
     <div class="card card-styling">
 
         <div class="card-header text-center">
-            <b>Are you sure you want to permanently delete this case?</b>
+            <b>Are you sure you want to permanently delete this walkthrough?</b>
         </div>
 
         <div class="card-body">
-            <p th:utext="${'<b>' + caseName + '</b> will be irretrievable, please ensure any legal requirements for record retention are met before proceeding.'}"></p>
+            <p th:utext="${'<b>' + walkthroughName + '</b> will be irretrievable.'}"></p>
         </div>
         <div class="text-center">
-            <form th:action="${'/confirm-delete?caseID=' + caseID}" method="post">
+            <form th:action="${'/confirm-delete-walkthrough?id=' + walkthroughID}" method="post">
                 <button class="btn btn-danger" type="submit">Delete</button>
             </form>
         </div>

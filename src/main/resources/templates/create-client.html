@@ -11,7 +11,7 @@
 <div class="jumbotron text-center" style="margin-bottom:0; height: 100px;">
     <h1>Add Client To Case</h1>
 </div>
-<form style="max-width: 50%; margin-left:5%; margin-top: 3%" th:action="@{/create-client}" th:object="${clientCreation}" method="post">
+<form style="max-width: 50%; margin-left:5%; margin-top: 3%" th:action="${'/create-client?caseID=' + caseID}" th:object="${clientCreation}" method="post">
     <h4>Client Details</h4>
     <div class="input-group">
         <span class="input-group-addon" id="basic-addon1" style="margin-top:15px"></span>
@@ -82,7 +82,7 @@
 
 
 
-    <a href="/create-client"><button class="btn btn-primary" type="submit">Add Client</button></a>
+    <button class="btn btn-primary" type="submit">Add Client</button>
 </form>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

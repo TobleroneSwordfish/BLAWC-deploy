@@ -33,7 +33,7 @@
                 </li>
                 <div sec:authorize="hasRole('ROLE_ADMIN')">
                     <form th:action="@{/search}" th:method="GET">
-                        <input name="searchQuery" type="text" placeholder="Search cases" style="margin-top:6px"/>
+                        <input name="searchQuery" type="text" placeholder="Search" style="margin-top:6px"/>
                     </form>
                 </div>
             </ul>

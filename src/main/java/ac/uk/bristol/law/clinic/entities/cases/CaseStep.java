@@ -1,6 +1,7 @@
 package ac.uk.bristol.law.clinic.entities.cases;
 
 import ac.uk.bristol.law.clinic.entities.walkthroughs.WalkthroughStep;
+import ac.uk.bristol.law.clinic.entities.walkthroughs.WalkthroughStepDocs;
 import lombok.Getter;
 import lombok.Setter;
 

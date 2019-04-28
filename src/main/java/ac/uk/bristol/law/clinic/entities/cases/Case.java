@@ -4,6 +4,9 @@ import ac.uk.bristol.law.clinic.entities.Client;
 import ac.uk.bristol.law.clinic.entities.Documents;
 import ac.uk.bristol.law.clinic.entities.User;
 import ac.uk.bristol.law.clinic.entities.walkthroughs.Walkthrough;
+import ac.uk.bristol.law.clinic.entities.walkthroughs.WalkthroughDocs;
+import ac.uk.bristol.law.clinic.entities.walkthroughs.WalkthroughStep;
+import ac.uk.bristol.law.clinic.entities.walkthroughs.WalkthroughStepDocs;
 import ac.uk.bristol.law.clinic.repositories.ActionRepository;
 import ac.uk.bristol.law.clinic.repositories.CaseStepRepository;
 import ac.uk.bristol.law.clinic.repositories.DocumentsRepository;
@@ -35,8 +38,6 @@ public class Case implements Serializable {
     @JoinColumn(name="supervisor") @Getter
     User supervisor;
 
-
-    //
     @OneToMany(mappedBy = "concreteCase") @Getter @Setter //cascade =ALL;
     private List<CaseStep> steps = new ArrayList<>();
 
@@ -44,12 +45,6 @@ public class Case implements Serializable {
     {
         this.steps.add(step);
     }
-    //
-
-//    public List<WalkthroughStep> getCaseSteps(){
-//        return this.walkthrough.getSteps();
-//    }
-//    DEPRICATED
 
     @ManyToOne(targetEntity = Walkthrough.class, fetch = FetchType.EAGER) @JoinColumn(name="walkthroughs") @Getter @Setter
     private Walkthrough walkthrough; //this used to be called "walkthroughIndex" //changed type to walkthrough
@@ -80,12 +75,10 @@ public class Case implements Serializable {
     @Getter
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.ALL},
             mappedBy = "myCases")
-    private Set<User> Users = new HashSet<>();//Note:Users are not clients here
+    private Set<User> users = new HashSet<>();//Note:users are not clients here
     public void addLawyer(User newLawyer){
-        this.Users.add(newLawyer);
+        this.users.add(newLawyer);
         newLawyer.addCase(this);
-
-        //repo.save(newLawyer);
     }
 
 
@@ -94,14 +87,14 @@ public class Case implements Serializable {
         lawyer.removeCase(this);
 
         Set<User> newLawyers = new HashSet<>();
-        for(User l : this.Users)
+        for(User l : this.users)
         {
             if(!l.getId().equals(lawyer.getId()))
             {
                 newLawyers.add(l);
             }
         }
-        this.Users = newLawyers;
+        this.users = newLawyers;
     }
 
     public List<String> getUserEmails(){
@@ -187,6 +180,7 @@ public class Case implements Serializable {
         this.step = 0;
         if (supervisor.isPresent()){
             this.supervisor = supervisor.get();
+            this.addLawyer(supervisor.get());
         }
     }
 
@@ -223,7 +217,7 @@ public class Case implements Serializable {
             user.removeCase(this);
         }
         this.getSupervisor().removeSupervisedCase(this);
-        for(Client client: this.getClients()){
+        for(Client client: new ArrayList<>(this.getClients())){
             client.removeCase(this);
         }
         this.getWalkthrough().removeCase(this);

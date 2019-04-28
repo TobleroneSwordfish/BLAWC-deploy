@@ -1,0 +1,19 @@
+.titleJumbotron {
+    margin-bottom: 0;
+    height: 100px;
+}
+
+.clickable-styling {
+    text-decoration: underline;
+    color: #007bff;
+}
+
+.card-styling {
+    background-color: aliceblue;
+    margin-bottom: 1em;
+}
+
+.clickable-styling:hover {
+    color: #0044cc;
+    cursor: pointer;
+}

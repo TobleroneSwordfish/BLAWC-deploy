@@ -19,5 +19,7 @@ public class UserCreation
     @Getter @Setter
     private String password;
     @Getter @Setter
+    private Integer ID;
+    @Getter @Setter
     private User.PermissionLevel permissionLevel;
 }

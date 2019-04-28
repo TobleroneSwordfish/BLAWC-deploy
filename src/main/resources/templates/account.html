@@ -17,11 +17,18 @@
                     </div>
                     <div class="form-group">
                         <label for="name">Name: </label>
-                        <input type="text" class="form-control" th:value="${fullname}" th:field="*{name}" id="name">
+                        <input type="text" class="form-control" th:value="${fullname}" th:field="*{name}" id="name" readonly>
                     </div>
                     <div class="form-group">
                         <label for="email">Email: </label>
                         <input type="text" class="form-control" th:value="${email}" th:field="*{email}" id="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="oldpassword">Old password</label>
+                        <label th:if="${#fields.hasErrors('oldPassword')}" th:class="'error'" th:errors=*{oldPassword} class="col-lg-4 control-label" style="color:red;" ></label>
+                        <input type="password" class="form-control" th:field="*{oldPassword}" id="oldpassword">
+                        <label for="newpassword">New password: </label>
+                        <input type="password" class="form-control" th:field="*{password}" id="newpassword">
                     </div>
                     <button class="btn" type="submit">Save</button>
                     <button class="btn" type="reset">Reset</button>

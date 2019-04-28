@@ -35,7 +35,6 @@
         <!--<small id="supervisorHelp" class="form-text text-muted">Add a supervisor to oversee your newly created case.</small>-->
     <!--</form>-->
 
-    <h4  style="margin-top:15px;">Case Type</h4>
 
     <form th:action="@{#}" th:object="${caseCreation}" id="post-form" method="post">
         <div class="form-group">
@@ -56,6 +55,7 @@
             <!--</select>-->
         <!--</div>-->
         <!--<small id="supervisorHelp" class="form-text text-muted">Add a supervisor to oversee your newly created case.</small>-->
+        <h4  style="margin-top:15px;">Case Type</h4>
 
         <div th:each="caseType: ${caseTypes}" class="card col-sm redirect-button" th:attr="data-walkthroughid=${caseType.getId()}" style="width: 18rem; margin-right:25px;">
             <div style="cursor:pointer" class="card-body row">

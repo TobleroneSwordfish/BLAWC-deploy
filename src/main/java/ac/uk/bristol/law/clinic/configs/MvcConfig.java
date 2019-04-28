@@ -39,6 +39,9 @@ public class MvcConfig implements WebMvcConfigurer
         registry
                 .addResourceHandler("/js/**")
                 .addResourceLocations("/js/");
+        registry
+                .addResourceHandler("/css/**")
+                .addResourceLocations("/css/");
     }
 
     //allows dots in path variables without truncation

@@ -416,7 +416,7 @@ public class DbDevelopmentSpringApplicationTests {
     @Test@Transactional
     public void walkthroughDocsOnetoMany(){
         Walkthrough walkthroughA = new Walkthrough("walker");
-        WalkthroughDocs walkthroughDocs = new WalkthroughDocs("walkthroughTemplate1", walkthroughA);
+        WalkthroughDocs walkthroughDocs = new WalkthroughDocs("walkthroughTemplate1", "/walkthrough/walker/walkthroughTemplate1");
         walkthroughRepository.save(walkthroughA);
         walkthroughDocsRepository.save(walkthroughDocs);
 

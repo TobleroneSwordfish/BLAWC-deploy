@@ -67,6 +67,11 @@ public class Client  implements Serializable {
     @Setter
     private String telephone;
 
+    public String getName()
+    {
+        return getFirstName() + " " + getLastName();
+    }
+
     @Getter
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.ALL},
             mappedBy = "clients")

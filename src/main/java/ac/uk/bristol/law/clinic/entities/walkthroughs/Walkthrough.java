@@ -1,6 +1,9 @@
 package ac.uk.bristol.law.clinic.entities.walkthroughs;
 import ac.uk.bristol.law.clinic.entities.cases.Case;
+import ac.uk.bristol.law.clinic.repositories.WalkthroughDocsRepository;
 import ac.uk.bristol.law.clinic.repositories.WalkthroughRepository;
+import ac.uk.bristol.law.clinic.repositories.WalkthroughStepDocsRepository;
+import ac.uk.bristol.law.clinic.repositories.WalkthroughStepRepository;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,8 +14,6 @@ import java.util.List;
 
 @Entity @Table(name="walkthroughs")
 public class Walkthrough  implements Serializable {
-
-    //public Iterable<Walkthrough> getCaseTypes(){ return this.walkthroughsRepository.findAll(); }
 
     public Iterable<Walkthrough> getCaseTypes(WalkthroughRepository walkthroughRepository){ return walkthroughRepository.findAll(); }
 
@@ -49,6 +50,22 @@ public class Walkthrough  implements Serializable {
 
     public void addDoc(WalkthroughDocs walkthroughDoc){
         this.walkthroughDocs.add(walkthroughDoc);
+    }
+
+    public void Close(WalkthroughStepRepository walkthroughStepRepository, WalkthroughDocsRepository walkthroughDocsRepository, WalkthroughStepDocsRepository walkthroughStepDocsRepository)
+    {
+        for (WalkthroughStep step : steps)
+        {
+            for (WalkthroughStepDocs doc : step.getDocs())
+            {
+                walkthroughStepDocsRepository.delete(doc);
+            }
+            walkthroughStepRepository.delete(step);
+        }
+        for (WalkthroughDocs doc : walkthroughDocs)
+        {
+            walkthroughDocsRepository.delete(doc);
+        }
     }
 
     public Walkthrough(String name)

@@ -4,12 +4,17 @@ import ac.uk.bristol.law.clinic.ControllerUtils;
 import ac.uk.bristol.law.clinic.DTO.*;
 import ac.uk.bristol.law.clinic.entities.Action;
 import ac.uk.bristol.law.clinic.entities.Client;
+import ac.uk.bristol.law.clinic.entities.Documents;
 import ac.uk.bristol.law.clinic.entities.User;
 import ac.uk.bristol.law.clinic.entities.cases.Case;
 import ac.uk.bristol.law.clinic.entities.cases.CaseStep;
+import ac.uk.bristol.law.clinic.entities.cases.StepDocs;
 import ac.uk.bristol.law.clinic.entities.walkthroughs.Walkthrough;
+import ac.uk.bristol.law.clinic.entities.walkthroughs.WalkthroughDocs;
 import ac.uk.bristol.law.clinic.entities.walkthroughs.WalkthroughStep;
+import ac.uk.bristol.law.clinic.entities.walkthroughs.WalkthroughStepDocs;
 import ac.uk.bristol.law.clinic.repositories.*;
+import ac.uk.bristol.law.clinic.services.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.annotation.Secured;
@@ -20,6 +25,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
@@ -35,6 +41,9 @@ import java.util.stream.Collectors;
 //@RequestMapping("/sessionattributes")//COMMENTED
 @SessionAttributes("caseCreationGathers")
 public class WebController {
+
+    @Autowired
+    private FileStorageService fileStorageService;
 
     @Autowired
     private UserRepository userRepository;
@@ -81,8 +90,9 @@ public class WebController {
         {
             User user = controllerUtils.getUserFromUsername(authentication.getName());
             model.addAttribute("fullname", user.getName());
-            List<Case> cases = new ArrayList<>(user.getMyCases());
-            cases.sort((o1, o2) -> new Long(o1.getId() - o2.getId()).intValue());
+            List<Case> casesx = new ArrayList<>(user.getMyCases());
+            casesx.sort((o1, o2) -> new Long(o1.getId() - o2.getId()).intValue());
+            Set<Case> cases = new HashSet<Case>(casesx);
             model.addAttribute("userCases", cases);
             addClientNames(user, model);
             Map<Long, Integer> caseCompletion = new HashMap<>();
@@ -130,24 +140,23 @@ public class WebController {
             Set<Case> casesSorted;
 
             if (status == null) {
-                casesSorted = caseRepository.findAll();
+                casesSorted = cases;
             }
             else {
                 //System.out.println("Status received: " + Case.CaseStatus.valueOf(status));
 
-                casesSorted = caseRepository.findAllByStatusEquals(Case.CaseStatus.valueOf(status));
-
-
+                casesSorted = caseRepository.findAllByStatusEqualsAndUsersContains(Case.CaseStatus.valueOf(status), user);
+                
             }
 
             if(supervisor != null) {
                 Optional<User> supers = userRepository.findById(supervisor);
                 if (supers.isPresent())
                 {
-                    casesSorted = caseRepository.findAllBySupervisorEquals(supers.get());
+                    casesSorted = caseRepository.findAllBySupervisorEqualsAndUsersContains(supers.get(), user);
                 }
                 else {
-                    casesSorted = caseRepository.findAll();
+                    casesSorted = cases;
 
                 }
             }
@@ -155,10 +164,10 @@ public class WebController {
             if(walkthrough != null) {
                 Optional<Walkthrough> walkies = walkthroughRepository.findById(walkthrough);
                 if (walkies.isPresent()) {
-                    casesSorted = caseRepository.findAllByWalkthroughEquals(walkies.get());
+                    casesSorted = caseRepository.findAllByWalkthroughEqualsAndUsersContains(walkies.get(), user);
                 }
                 else {
-                    casesSorted = caseRepository.findAll();
+                    casesSorted = cases;
                 }
             }
 
@@ -205,12 +214,23 @@ public class WebController {
     }
 
     @PostMapping("/account")
-    public String accountPost(@ModelAttribute UserEdit userEdit)
+    public String accountPost(@Valid UserEdit userEdit, BindingResult bindingResult)
     {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.isAuthenticated()) {
             User user = controllerUtils.getUserFromUsername(authentication.getName());
-            user.setEmail(userEdit.getEmail());
+            if (passwordEncoder.matches(userEdit.getOldPassword(), user.getPassword()))
+            {
+                user.setEmail(userEdit.getEmail());
+                if (!userEdit.getPassword().isEmpty())
+                {
+                    user.setPassword(passwordEncoder.encode(userEdit.getPassword()));
+                }
+            }
+            else
+            {
+                bindingResult.addError(new FieldError("userEdit", "oldPassword", "Wrong password"));
+            }
         }
         return "account";
     }
@@ -231,8 +251,13 @@ public class WebController {
             model.addAttribute("currentCase", currentCaseName);
             model.addAttribute("caseID", currentCase.getId());
             model.addAttribute("currentClient", currentClientDetails);
+            model.addAttribute("supervisor", currentCase.getSupervisor());
             model.addAttribute("caseDocs", currentCase.getDocs());
             model.addAttribute("assignees", currentCase.getUsers());
+            Set<User> lawyers = currentCase.getUsers();
+
+            model.addAttribute("lawyerID", lawyers.iterator().next().getId());
+
             model.addAttribute("status", currentCase.getStatus().name());
             model.addAttribute("actions", currentCase.getActions(actionRepository));
             List<String> statuses = new ArrayList<>();
@@ -281,6 +306,7 @@ public class WebController {
         return "client-details";
     }
 
+    @Secured({"ROLE_ADMIN"})
     @GetMapping("/confirm-delete")
     public String deleteCaseMap(@RequestParam(name="caseID") Integer caseID, Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -293,6 +319,7 @@ public class WebController {
         return "confirm-delete";
     }
 
+    @Secured({"ROLE_ADMIN"})
     @PostMapping("/confirm-delete")
     public String deleteCasePost(@RequestParam("caseID") Long caseID) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -302,9 +329,9 @@ public class WebController {
             casedelete.Close(stepDocsRepository, actionRepository, documentsRepository, caseStepRepository);
             caseRepository.delete(casedelete);
         }
-        for(Case r : caseRepository.findAll()){
-            System.out.println("!!!!!");
-        }
+//        for(Case r : caseRepository.findAll()){
+//            System.out.println("!!!!!");
+//        }
         return "redirect:/";
     }
 
@@ -539,22 +566,17 @@ public class WebController {
     }
 
     @GetMapping("/create-client")
-    public String clientMap(Model model) {
+    public String clientMap(Model model, @RequestParam(value="caseID", required=false) Long caseID) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        System.out.print(walktest.getName());
         if (authentication.isAuthenticated())
         {
             User user = controllerUtils.getUserFromUsername(authentication.getName());
-
-
-            Set<Case> caseSet = (Set<Case>) model.asMap().get("caseCreationGathers");
-            boolean seshattribute = caseSet.isEmpty();
+            model.addAttribute("caseID", caseID);
             model.addAttribute("fullname", user.getName());
             model.addAttribute("allCases", user.getMyCases());
             model.addAttribute("clientCreation", new ClientCreation());
         }
         model.addAttribute("username", authentication.getName());
-
         return "create-client";
     }
 
@@ -585,35 +607,125 @@ public class WebController {
         return new RedirectView("/admin");
     }
 
-    @PostMapping("/create-client")
-    public RedirectView clientCreationPost(HttpServletRequest request, @ModelAttribute("caseCreationGathers") Set<Case> caseCreationGathers, @Valid ClientCreation createClient, BindingResult bindingResult, RedirectAttributes attributes)
-    {
+    @GetMapping("/add-lawyer")
+    public String addLawerMap(@RequestParam(name="caseID") Integer caseID, Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Integer i = 0;
-        Long newCaseID = Long.valueOf(i);
-        if (authentication.isAuthenticated()) {
-            if(bindingResult.hasErrors()) {
-                return new RedirectView("create-client");
+        if (authentication.isAuthenticated())
+        {
+            model.addAttribute("caseCreation", new CaseCreation());
+            model.addAttribute("caseID", caseID);
+            List<User> allUsers = new ArrayList<>();
+            for(User x : userRepository.findAll()) {
+                allUsers.add(x);
             }
-            String[] fullAddress = {createClient.getAddress1(), createClient.getAddress2(), createClient.getCity(), createClient.getCounty(), createClient.getPostCode()};
-            Client client = new Client(createClient.getFirstName(), createClient.getLastName(), createClient.getEmail(), fullAddress, createClient.getTelephone());
-
-            //set some fields not set in constructor
-            client.setAge(Client.Ages.valueOf(createClient.getAge()));
-            client.setGender(Client.Genders.valueOf(createClient.getGender()));
-            client.setEthnicity(Client.Ethnicities.valueOf(createClient.getEthnicity()));
-            client.setDisability(Client.Disibilities.valueOf(createClient.getDisibility()));
-
-            clientRepository.save(client);
-            Case newcase = caseCreationGathers.iterator().next();//COMMENTED
-            newcase.addClient(client);
-            caseRepository.save(newcase);
-            newCaseID = newcase.getId();
-            //attributes.addFlashAttribute("user-overview");
+            model.addAttribute("allUsers", allUsers);
         }
-        //return "redirect: /user-overview"; //for some reason returns a 404??
-        return new RedirectView("case-display?caseID=" + newCaseID) ;
-        //return new RedirectView("/");
+        return "add-lawyer";
+    }
+
+    @PostMapping("/add-lawyer")
+    public RedirectView addLawyerPost(Model model, @RequestParam("caseID") Long caseID, @Valid CaseCreation createCase, BindingResult bindingResult) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.isAuthenticated())
+        {
+
+            User lawyerToBeAdded = userRepository.findById(createCase.getCaseSupervisor()).get();
+            Case theCase = caseRepository.findById(caseID).get();
+            theCase.addLawyer(lawyerToBeAdded);
+        }
+        //return "redirect:/";
+        return new RedirectView("case-display?caseID=" + caseID) ;
+    }
+
+    @GetMapping("/confirm-delete-lawyer")
+    public String deleteLawyerMap(@RequestParam("caseID") Long caseID, @RequestParam(name="lawyerID") Integer lawyerID, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.isAuthenticated())
+        {
+            User lawyerRemove = userRepository.findById((long)lawyerID).get();
+            Case caseRemove = caseRepository.findById(caseID).get();
+            model.addAttribute("caseName", caseRemove.getName());
+            model.addAttribute("lawyerName", lawyerRemove.getName());
+            model.addAttribute("lawyerID", lawyerID);
+            model.addAttribute("caseID", caseID);
+        }
+        return "confirm-delete-lawyer";
+    }
+
+    @PostMapping("/confirm-delete-lawyer")
+    public RedirectView deleteLawyerPost(@RequestParam("caseID") Long caseID, @RequestParam("lawyerID") Long lawyerID) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.isAuthenticated())
+        {
+            User lawyerRemove = userRepository.findById(lawyerID).get();
+            Case caseRemove = caseRepository.findById(caseID).get();
+            caseRemove.removeUser(lawyerRemove);
+        }
+        //return "confirm-delete-lawyer";
+        return new RedirectView("case-display?caseID=" + caseID) ;
+    }
+
+    @GetMapping("/add-client")
+    public String addClientMap(@RequestParam(name="caseID") Integer caseID, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.isAuthenticated())
+        {
+            model.addAttribute("caseCreation", new CaseCreation());
+            model.addAttribute("caseID", caseID);
+            List<Client> allClients = new ArrayList<>();
+            for(Client x : clientRepository.findAll()) {
+                allClients.add(x);
+            }
+            model.addAttribute("allClients", allClients);
+        }
+        return "add-client";
+    }
+
+    @PostMapping("/add-client")
+    public RedirectView addClientPost(Model model, @RequestParam("caseID") Long caseID, @Valid CaseCreation createCase, BindingResult bindingResult) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.isAuthenticated())
+        {
+            Client clientToBeAdded = clientRepository.findById(createCase.getCaseSupervisor()).get();
+            return AddClientToCase(clientToBeAdded, caseID);
+        }
+        //return "redirect:/";
+        return new RedirectView("/") ;
+    }
+
+    private RedirectView AddClientToCase(Client client, Long caseID)
+    {
+        if (caseID != null)
+        {
+            Optional<Case> opt = caseRepository.findById(caseID);
+            if (opt.isPresent())
+            {
+                Case theCase = opt.get();
+                theCase.addClient(client);
+                caseRepository.save(theCase);
+                return new RedirectView("case-display?caseID=" + caseID);
+            }
+        }
+        return new RedirectView("/");
+    }
+
+    @PostMapping("/create-client")
+    public RedirectView clientCreationPost(@RequestParam(name="caseID", required = false) Long caseID, HttpServletRequest request, @Valid ClientCreation createClient, BindingResult bindingResult, RedirectAttributes attributes)
+    {
+        if(bindingResult.hasErrors()) {
+            return new RedirectView("create-client");
+        }
+        String[] fullAddress = {createClient.getAddress1(), createClient.getAddress2(), createClient.getCity(), createClient.getCounty(), createClient.getPostCode()};
+        Client client = new Client(createClient.getFirstName(), createClient.getLastName(), createClient.getEmail(), fullAddress, createClient.getTelephone());
+
+        //set some fields not set in constructor
+        client.setAge(Client.Ages.valueOf(createClient.getAge()));
+        client.setGender(Client.Genders.valueOf(createClient.getGender()));
+        client.setEthnicity(Client.Ethnicities.valueOf(createClient.getEthnicity()));
+        client.setDisability(Client.Disibilities.valueOf(createClient.getDisibility()));
+
+        clientRepository.save(client);
+        return AddClientToCase(client, caseID);
     }
 
     @GetMapping("/case-creation")
@@ -664,16 +776,35 @@ public class WebController {
             //User supervisor = user;
 
             Case newCase = new Case(caseName, caseWalkthrough, clientSet, userSet, Optional.of(supervisor));
-            this.caseRepository.save(newCase);
+            caseRepository.save(newCase);
+            for (WalkthroughDocs doc : caseWalkthrough.getWalkthroughDocs())
+            {
+                Documents caseDoc = new Documents(doc, false, user, fileStorageService);
+                newCase.addDoc(caseDoc);
+                documentsRepository.save(caseDoc);
+            }
+            for (WalkthroughStep step : caseWalkthrough.getSteps())
+            {
+                CaseStep newStep = new CaseStep(step, newCase);
+                caseStepRepository.save(newStep);
+                for (WalkthroughStepDocs doc : step.getDocs())
+                {
+                    StepDocs stepDoc = new StepDocs(doc, newStep, fileStorageService);
+                    newStep.addDoc(stepDoc);
+                    stepDocsRepository.save(stepDoc);
+                }
+                newCase.addStep(newStep);
+                caseStepRepository.save(newStep);
+            }
+            caseRepository.save(newCase);
             Action action = new Action(Action.ActionType.CREATE_CASE, user, newCase);
             actionRepository.save(action);
-            caseCreationGathers.add(newCase);
-            attributes.addFlashAttribute("caseCreationGathers", caseCreationGathers);
-            System.out.println(supervisor);
-//            request.getSession().setAttribute("testkey", "value");
+//            caseCreationGathers.add(newCase);
+//            attributes.addFlashAttribute("caseCreationGathers", caseCreationGathers);
+            //System.out.println(supervisor);
+            return new RedirectView("create-client?caseID=" + newCase.getId());
         }
-
-        return new RedirectView("create-client");//COMMENTED
+        return new RedirectView("/");
     }
 
 
@@ -688,71 +819,126 @@ public class WebController {
         return "casetype-creation";
     }
 
+    @Secured({"ROLE_ADMIN"})
     @PostMapping("/casetype-creation")
     public RedirectView caseTypeCreationPost(HttpServletRequest request, @ModelAttribute WalkthroughCreation walkthrough, BindingResult bindingResult, @ModelAttribute("currentSteps") List<WalkthroughStep> currentSteps, RedirectAttributes attributes){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.isAuthenticated()) {
-
-            //System.out.println("\u001B[31m" + "1." + "\u001B[0m");
             if(bindingResult.hasErrors()) {
                 return new RedirectView("casetype-creation");
             }
-            request.getSession().setAttribute("name", walkthrough.getName());
-            request.getSession().setAttribute("description", walkthrough.getDescription());
-            //System.out.println("\u001B[31m" + "casetype postmap" + walkthrough.getName() + "\u001B[0m");
             Walkthrough newWalkthrough = new Walkthrough(walkthrough.getName());
             walkthroughRepository.save(newWalkthrough);
 
-            request.getSession().setAttribute("walkthroughId", newWalkthrough);
-
             attributes.addFlashAttribute("currentSteps", currentSteps);
-            return new RedirectView("addsteps?walkthroughid=" + newWalkthrough.getId());
+            return new RedirectView("walkthrough-display?id=" + newWalkthrough.getId());
         }
         return new RedirectView("/");
     }
 
     @Secured({"ROLE_ADMIN"})
-    @GetMapping("/addsteps")
-    public String addstepMap(@RequestParam(name="walkthroughid") Integer walkthroughid, HttpServletRequest request, Model model, @ModelAttribute("currentSteps") List<WalkthroughStep> currentSteps, RedirectAttributes attributes){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        //System.out.println("\u001B[31m" + "get addsteps" + "\u001B[0m");
-        if (authentication.isAuthenticated()) {
-            //String string = (String)request.getSession().getAttribute("walkthroughId");
-            Walkthrough newwalk = walkthroughRepository.findById(walkthroughid.longValue()).get();//(Walkthrough)request.getSession().getAttribute("walkthroughId");//walkthroughRepository.findById(Long.getLong(string)).get();
-
-            //System.out.println(newwalk.getSteps().size());
-            model.addAttribute("walkthroughId", newwalk.getId());
-            model.addAttribute("name", request.getSession().getAttribute("name"));
-            model.addAttribute("description", request.getSession().getAttribute("description"));
-            model.addAttribute("currentSteps", newwalk.getSteps());
-            model.addAttribute("nosteps", Integer.toString(newwalk.getSteps().size()+1));
-            model.addAttribute("stepCreation", new stepCreation());
-
-            //attributes.addFlashAttribute("currentSteps", currentSteps);
-        }
-        return "addsteps";
-    }
-
-    @PostMapping("/addsteps")
-    public RedirectView addstepPost(@RequestParam(name="walkthroughid") Integer walkthroughid, HttpServletRequest request, @ModelAttribute stepCreation newstep, BindingResult bindingResult, @ModelAttribute("currentSteps") List<WalkthroughStep> currentSteps, RedirectAttributes attributes){
+    @GetMapping("/walkthrough-display")
+    public String addstepMap(@RequestParam(name="id") Integer walkthroughid, HttpServletRequest request, Model model, RedirectAttributes attributes){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.isAuthenticated()) {
-            //System.out.println("\u001B[31m" + "addsteps postmap" + Integer.parseInt(newstep.getNumber()) + "\u001B[0m");
-
-
-            //System.out.println("\u001B[31m" + currentSteps.size() + "\u001B[0m");
-            //currentSteps.add(new WalkthroughStep(newstep.getName(), Integer.parseInt(newstep.getNumber()), (Walkthrough) request.getSession().getAttribute("walkthroughId")));
-            //Walkthrough newwalk = (Walkthrough)request.getSession().getAttribute("walkthroughId");//walkthroughRepository.findById((Long)request.getSession().getAttribute("walkthroughId")).get();
             Walkthrough newwalk = walkthroughRepository.findById(walkthroughid.longValue()).get();
 
-            WalkthroughStep newstepConcrete = new WalkthroughStep(newstep.getName(), Integer.parseInt(newstep.getNumber()), newwalk);
-            walkthroughStepRepository.save(newstepConcrete);
-            //System.out.println("\u001B[31m" + currentSteps.size() + "\u001B[0m");
-
-            attributes.addFlashAttribute("currentSteps", currentSteps);
-            return new RedirectView("addsteps?walkthroughid=" + newwalk.getId());
+            model.addAttribute("walkthroughId", newwalk.getId());
+            model.addAttribute("name", newwalk.getName());
+            model.addAttribute("description", newwalk.getDescription());
+            model.addAttribute("currentSteps", newwalk.getSteps());
+//            System.out.println(newwalk.getSteps().get(1).getDocs());
+            model.addAttribute("nosteps", Integer.toString(newwalk.getSteps().size()+1));
+            model.addAttribute("stepCreation", new StepCreation());
+            model.addAttribute("walkthroughDocs", newwalk.getWalkthroughDocs());
         }
-        return new RedirectView("addsteps");
+        return "walkthrough-display";
+    }
+
+    @Secured({"ROLE_ADMIN"})
+    @PostMapping("/add-walkthrough-step")
+    public RedirectView addstepPost(@RequestParam(name="id") Integer walkthroughid, HttpServletRequest request, @ModelAttribute StepCreation newstep, BindingResult bindingResult, @ModelAttribute("currentSteps") List<WalkthroughStep> currentSteps, RedirectAttributes attributes){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.isAuthenticated()) {
+            Optional<Walkthrough> opt = walkthroughRepository.findById(walkthroughid.longValue());
+            if (!opt.isPresent())
+            {
+                return new RedirectView("error");
+            }
+            else
+            {
+                Walkthrough newwalk = walkthroughRepository.findById(walkthroughid.longValue()).get();
+                WalkthroughStep newstepConcrete = new WalkthroughStep(newstep.getName(), newwalk.getSteps().size() + 1, newwalk);
+                walkthroughStepRepository.save(newstepConcrete);
+                attributes.addFlashAttribute("currentSteps", currentSteps);
+                return new RedirectView("walkthrough-display?id=" + newwalk.getId());
+            }
+        }
+        return new RedirectView("walkthrough-display");
+    }
+
+
+    @Secured({"ROLE_ADMIN"})
+    @GetMapping("/allwalkthroughs")
+    public String allWalkthroughs(Model model)
+    {
+        model.addAttribute("allWalkthroughs", walkthroughRepository.findAll());
+        return "allwalkthroughs";
+    }
+
+    @Secured({"ROLE_ADMIN"})
+    @GetMapping("/confirm-delete-walkthrough")
+    public String deleteWalkthroughGet(@RequestParam(name="id") Long id, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.isAuthenticated())
+        {
+            Walkthrough walkthrough = walkthroughRepository.findById(id).get();
+            model.addAttribute("walkthroughName", walkthrough.getName());
+            model.addAttribute("walkthroughID", id);
+        }
+        return "confirm-delete-walkthrough";
+    }
+
+    @Secured({"ROLE_ADMIN"})
+    @PostMapping("/confirm-delete-walkthrough")
+    public String deleteWalkthroughPost(@RequestParam("id") Long id, @Autowired WalkthroughDocsRepository walkthroughDocsRepository, @Autowired WalkthroughStepDocsRepository walkthroughStepDocsRepository) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.isAuthenticated())
+        {
+            Walkthrough walkthrough = walkthroughRepository.findById(id).get();
+            walkthrough.Close(walkthroughStepRepository, walkthroughDocsRepository, walkthroughStepDocsRepository);
+            walkthroughRepository.delete(walkthrough);
+        }
+        return "redirect:/";
+    }
+
+    @Secured({"ROLE_ADMIN"})
+    @GetMapping("/addstepscase")
+    public String addcasestepMap(@RequestParam(name="caseID") Integer caseid, HttpServletRequest request, Model model, @ModelAttribute("currentSteps") List<CaseStep> currentSteps, RedirectAttributes attributes){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.isAuthenticated()) {
+            Case currentCase = caseRepository.findById(caseid.longValue()).get();
+            model.addAttribute("caseID", currentCase.getId());
+            model.addAttribute("name", request.getSession().getAttribute("name"));
+            model.addAttribute("currentSteps", currentCase.getSteps());
+            model.addAttribute("nosteps", Integer.toString(currentCase.getSteps().size()+1));
+            model.addAttribute("stepCreation", new StepCreation());
+
+        }
+        return "addstepscase";
+    }
+
+    @PostMapping("/addstepscase")
+    public String addcasestepPost(@RequestParam(name="caseID") Integer caseID, @ModelAttribute StepCreation newstep){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.isAuthenticated()) {
+            Case currentCase = caseRepository.findById(caseID.longValue()).get();
+            CaseStep ConcretenewStep = new CaseStep(newstep.getName(), currentCase.getSteps().size() + 1, currentCase);
+            caseStepRepository.save(ConcretenewStep);
+            caseRepository.save(currentCase);
+            return "redirect:case-display?caseID=" + caseID;
+        }
+        return "allcases";
     }
 
     @ModelAttribute("currentSteps")
@@ -760,10 +946,4 @@ public class WebController {
         return new ArrayList<WalkthroughStep>();
     }
 
-//    @GetMapping("favicon.ico")
-//    public String favicon()
-//    {
-//        System.out.println("favicon requested");
-//        return "https://mybristol.bris.ac.uk/favicon.ico";
-//    }
 }

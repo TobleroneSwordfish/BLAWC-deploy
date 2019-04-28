@@ -19,22 +19,17 @@ public class WalkthroughDocs {
     String name;
 
 
-    @ManyToOne(targetEntity = WalkthroughStep.class)
-    @JoinColumn(name="walkthrough_id") @Getter
+    @ManyToOne(targetEntity = Walkthrough.class)
+    @JoinColumn(name="walkthrough_id") @Getter @Setter
     Walkthrough walkthrough;
-
-    public void setWalkthrough(Walkthrough walkthrough){
-        this.walkthrough = walkthrough;
-        walkthrough.addDoc(this);
-    }
 
     @Column(name="URL") @Getter @Setter
     String url;
 
-    public WalkthroughDocs(String name, Walkthrough walkthrough)
+    public WalkthroughDocs(String name, String url)
     {
         this.name = name;
-        this.setWalkthrough(walkthrough);
+        this.url = url;
     }
 
     public WalkthroughDocs() {}

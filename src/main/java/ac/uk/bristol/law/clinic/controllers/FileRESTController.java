@@ -6,6 +6,10 @@ import ac.uk.bristol.law.clinic.entities.cases.Case;
 import ac.uk.bristol.law.clinic.entities.cases.CaseStep;
 import ac.uk.bristol.law.clinic.entities.Documents;
 import ac.uk.bristol.law.clinic.entities.cases.StepDocs;
+import ac.uk.bristol.law.clinic.entities.walkthroughs.Walkthrough;
+import ac.uk.bristol.law.clinic.entities.walkthroughs.WalkthroughDocs;
+import ac.uk.bristol.law.clinic.entities.walkthroughs.WalkthroughStep;
+import ac.uk.bristol.law.clinic.entities.walkthroughs.WalkthroughStepDocs;
 import ac.uk.bristol.law.clinic.repositories.*;
 import ac.uk.bristol.law.clinic.services.FilePermissionService;
 import ac.uk.bristol.law.clinic.services.FileStorageService;
@@ -29,7 +33,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
-
+//I genuinely apologize for this mess, but this is getting pushed live way too soon for me to fix this with a decent OOP system
+//oh, and for some reason spring refuses to serve XML files, it knocks the file extension off and 404s
+//chances the law clinic ever even know what kind of animal an XML is are remote so I'm leaving it for now
 @Controller
 public class FileRESTController
 {
@@ -58,28 +64,40 @@ public class FileRESTController
     ActionRepository actionRepository;
 
     @Autowired
+    WalkthroughRepository walkthroughRepository;
+
+    @Autowired
+    WalkthroughDocsRepository walkthroughDocsRepository;
+
+    @Autowired
+    WalkthroughStepDocsRepository walkthroughStepDocsRepository;
+
+    @Autowired
+    WalkthroughStepRepository walkthroughStepRepository;
+
+    @Autowired
     private ControllerUtils controllerUtils;
 
     //java doesn't have optional params
-    private ResponseEntity tryGetFile(Long caseID, String filename)
+    private ResponseEntity tryGetCaseFile(Long caseID, String filename, boolean walkthrough)
     {
-        return tryGetFile(caseID, -1l, filename);
+        return tryGetFile(caseID, -1l, filename, walkthrough);
     }
 
     //try to fetch the file from storage, returning a response based on whether it was found
-    private ResponseEntity tryGetFile(Long caseID, Long stepID, String filename)
+    private ResponseEntity tryGetFile(Long caseID, Long stepID, String filename, boolean walkthrough)
     {
         try
         {
-            String stringPath;
+            String stringPath = walkthrough ? "walkthrough/" : "case/";
             //is a stepID specified
             if (stepID > 0)
             {
-                stringPath = "case/" + caseID + "/step/" + stepID + "/" + filename;
+                stringPath += caseID + "/step/" + stepID + "/" + filename;
             }
             else
             {
-                stringPath = "case/" + caseID + "/" + filename;
+                stringPath += caseID + "/" + filename;
             }
             if (fileStore.fileExists(stringPath))
             {
@@ -87,7 +105,8 @@ public class FileRESTController
                 if (authentication.isAuthenticated())
                 {
                     User user = controllerUtils.getUserFromUsername(authentication.getName());
-                    if (permissionService.userHasRead(user, caseRepository.findById(caseID).get()))
+                    if ((!walkthrough && permissionService.userHasRead(user, caseRepository.findById(caseID).get())) ||
+                        walkthrough && (permissionService.userHasRead(user, walkthroughRepository.findById(caseID).get())))
                     {
                         File file = fileStore.getFile(stringPath);
                         InputStream inputStream = new FileInputStream(file);
@@ -136,37 +155,51 @@ public class FileRESTController
     @GetMapping("/files/case/{caseID}/step/{stepID}/{filename}")
     public ResponseEntity getFile(@PathVariable("caseID") Long caseID, @PathVariable("stepID") Long stepID, @PathVariable("filename") String filename)
     {
-//        System.out.println("Received request for file " + filename);
-        return tryGetFile(caseID, stepID, filename);
+        return tryGetFile(caseID, stepID, filename, false);
     }
 
     @GetMapping("/files/case/{caseID}/{filename}")
     public ResponseEntity getFile(@PathVariable("caseID") Long caseID,
                                   @PathVariable("filename") String filename)
     {
-        return tryGetFile(caseID, filename);
+        return tryGetCaseFile(caseID, filename, false);
     }
 
-    private ResponseEntity tryStoreFile(MultipartFile file, Long caseID)
+    @GetMapping("/files/walkthrough/{walkthroughID}/step/{stepID}/{filename}")
+    public ResponseEntity getWalkthroughFile(@PathVariable("walkthroughID") Long walkthroughID, @PathVariable("stepID") Long stepID, @PathVariable("filename") String filename)
     {
-        return tryStoreFile(file, caseID, -1l);
+        return tryGetFile(walkthroughID, stepID, filename, true);
     }
 
-    private ResponseEntity tryStoreFile(MultipartFile file, Long caseID, Long stepID)
+    @GetMapping("/files/walkthrough/{walkthroughID}/{filename}")
+    public ResponseEntity getWalkthroughFile(@PathVariable("walkthroughID") Long walkthroughID,
+                                  @PathVariable("filename") String filename)
     {
-        String stringPath;
+        return tryGetCaseFile(walkthroughID, filename, true);
+    }
+
+    private ResponseEntity tryStoreFile(MultipartFile file, Long caseID, boolean walkthrough)
+    {
+        return tryStoreFile(file, caseID, -1l, walkthrough);
+    }
+
+    private ResponseEntity tryStoreFile(MultipartFile file, Long caseID, Long stepID, boolean walkthrough)
+    {
+        String stringPath = walkthrough ? "walkthrough/" : "case/";
         if (stepID > 0)
         {
-            stringPath = "case/" + caseID + "/step/" + stepID + "/";
+            stringPath += caseID + "/step/" + stepID + "/";
         }
         else
         {
-            stringPath = "case/" + caseID + "/";
+            stringPath += caseID + "/";
         }
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.isAuthenticated()) {
             User user = controllerUtils.getUserFromUsername(authentication.getName());
-            if (permissionService.userHasWrite(user, caseRepository.findById(caseID).get())) {
+            if ((!walkthrough && permissionService.userHasWrite(user, caseRepository.findById(caseID).get())) ||
+                    walkthrough && (permissionService.userHasWrite(user, walkthroughRepository.findById(caseID).get())))
+            {
                 try
                 {
                     //actually store the file
@@ -177,19 +210,34 @@ public class FileRESTController
                         try
                         {
                             fileStore.storeFile(stringPath, inStream, filename);
-                            Case theCase = caseRepository.findById(caseID).get();
-                            boolean fileExists;
-                            if (stepID > 0)
+                            if (!walkthrough)
                             {
-                                fileExists = !storeStepDoc(file, theCase.getSteps().get(stepID.intValue() - 1), stringPath, filename, user);
+                                Case theCase = caseRepository.findById(caseID).get();
+                                boolean fileExists;
+                                if (stepID > 0)
+                                {
+                                    fileExists = !storeStepDoc(theCase.getSteps().get(stepID.intValue() - 1), stringPath, filename, user);
+                                }
+                                else
+                                {
+                                    fileExists = !storeCaseDoc(theCase, stringPath, filename, user);
+                                }
+                                Action action = new Action(Action.ActionType.UPLOAD_FILE, user, theCase);
+                                action.setBody(filename);
+                                actionRepository.save(action);
                             }
                             else
                             {
-                                fileExists = !storeCaseDoc(file, theCase, stringPath, filename, user);
+                                Walkthrough theWalkthrough = walkthroughRepository.findById(caseID).get();
+                                if (stepID > 0)
+                                {
+                                    storeWalkthroughStepDoc(theWalkthrough.getSteps().get(stepID.intValue() - 1), stringPath, filename, user);
+                                }
+                                else
+                                {
+                                    storeWalkthroughDoc(theWalkthrough, stringPath, filename, user);
+                                }
                             }
-                            Action action = new Action(Action.ActionType.UPLOAD_FILE, user, theCase);
-                            action.setBody(filename);
-                            actionRepository.save(action);
                         }
                         catch(Exception e)
                         {
@@ -217,7 +265,7 @@ public class FileRESTController
         return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    private boolean storeCaseDoc(MultipartFile file, Case theCase, String path, String filename, User user)
+    private boolean storeCaseDoc(Case theCase, String path, String filename, User user)
     {
         if (!theCase.getDocs().stream().anyMatch(d -> d.getUrl() == path))
         {
@@ -232,7 +280,22 @@ public class FileRESTController
         return false;
     }
 
-    private boolean storeStepDoc(MultipartFile file, CaseStep step, String path, String filename, User user)
+    private boolean storeWalkthroughDoc(Walkthrough walkthrough, String path, String filename, User user)
+    {
+        if (!walkthrough.getWalkthroughDocs().stream().anyMatch(d -> d.getUrl() == path))
+        {
+            //System.out.println("Adding new doc entry");
+            WalkthroughDocs doc = new WalkthroughDocs(filename, "/" + path + filename);
+            walkthrough.addDoc(doc);
+            doc.setWalkthrough(walkthrough);
+            walkthroughDocsRepository.save(doc);
+            walkthroughRepository.save(walkthrough);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean storeStepDoc(CaseStep step, String path, String filename, User user)
     {
         if (!step.getDocs().stream().anyMatch(d -> d.getName() == filename))
         {
@@ -247,25 +310,54 @@ public class FileRESTController
         return false;
     }
 
+    private boolean storeWalkthroughStepDoc(WalkthroughStep step, String path, String filename, User user)
+    {
+        if (!step.getDocs().stream().anyMatch(d -> d.getName() == filename))
+        {
+            WalkthroughStepDocs doc = new WalkthroughStepDocs(filename, step);
+            step.addDoc(doc);
+            doc.setCasestep(step);
+            doc.setUrl("/" + path + filename);
+            walkthroughStepDocsRepository.save(doc);
+            walkthroughStepRepository.save(step);
+            return true;
+        }
+        return false;
+    }
+
     @PostMapping("/files/case/{caseID}")
     public String uploadFile(HttpServletRequest request, @RequestParam("file") MultipartFile file, @PathVariable("caseID") Long caseID)
     {
-        tryStoreFile(file, caseID);
+        tryStoreFile(file, caseID, false);
+        return "redirect:" + request.getHeader("Referer");
+    }
+
+    @PostMapping("/files/walkthrough/{walkthroughID}")
+    public String uploadWalkthroughFile(HttpServletRequest request, @RequestParam("file") MultipartFile file, @PathVariable("walkthroughID") Long walkthroughID)
+    {
+        tryStoreFile(file, walkthroughID, true);
         return "redirect:" + request.getHeader("Referer");
     }
 
     @PostMapping("/files/case/{caseID}/step/{stepID}")
     public String uploadFile(HttpServletRequest request, @RequestParam("file") MultipartFile file, @PathVariable("caseID") Long caseID, @PathVariable("stepID") Long stepID)
     {
-        tryStoreFile(file, caseID, stepID);
+        tryStoreFile(file, caseID, stepID, false);
         return "redirect:" + request.getHeader("Referer");
     }
 
-    //TODO: delet this
-    @GetMapping("upload-test")
-    public String test()
+    @PostMapping("/files/walkthrough/{walkthroughID}/step/{stepID}")
+    public String uploadWalkthroughFile(HttpServletRequest request, @RequestParam("file") MultipartFile file, @PathVariable("walkthroughID") Long walkthroughID, @PathVariable("stepID") Long stepID)
     {
-        return "upload-test";
+        tryStoreFile(file, walkthroughID, stepID, true);
+        return "redirect:" + request.getHeader("Referer");
     }
+
+//    //TODO: delet this
+//    @GetMapping("upload-test")
+//    public String test()
+//    {
+//        return "upload-test";
+//    }
 
 }

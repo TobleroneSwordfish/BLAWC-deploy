@@ -25,7 +25,7 @@ public class EmailController
     @GetMapping("/send-email")
     public String getMapping(Model model, @RequestParam(value = "address", required = false) String[] addresses)
     {
-        System.out.println("Addresses received: " + addresses);
+//        System.out.println("Addresses received: " + addresses);
         model.addAttribute("addresses", addresses);
         SendEmail dto = new SendEmail();
         dto.addresses = new ArrayList<>();
@@ -40,10 +40,9 @@ public class EmailController
     @PostMapping("/send-email")
     public void postMapping(@ModelAttribute SendEmail sendEmail)
     {
-        System.out.println("Post mapping called");
-        System.out.println(sendEmail.getBody());
+//        System.out.println("Post mapping called");
+//        System.out.println(sendEmail.getBody());
         MimeMessage msg = mailSender.createMimeMessage();
-        //SimpleMailMessage msg = new SimpleMailMessage();
         try
         {
             msg.setContent(sendEmail.getBody(), "text/html");
@@ -57,7 +56,7 @@ public class EmailController
         mailMsg.setTo((String[])sendEmail.getAddresses().toArray(new String[sendEmail.getAddresses().size()]));
         mailMsg.setFrom("blawctestemail@gmail.com");
         mailMsg.setSubject(sendEmail.getSubject());
-        System.out.println(msg);
+//        System.out.println(msg);
         mailSender.send(msg);
     }
 }
