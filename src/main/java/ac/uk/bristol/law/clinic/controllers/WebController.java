@@ -779,7 +779,7 @@ public class WebController {
             caseRepository.save(newCase);
             for (WalkthroughDocs doc : caseWalkthrough.getWalkthroughDocs())
             {
-                Documents caseDoc = new Documents(doc, false, user, fileStorageService);
+                Documents caseDoc = new Documents(doc, false, user, fileStorageService, newCase);
                 newCase.addDoc(caseDoc);
                 documentsRepository.save(caseDoc);
             }

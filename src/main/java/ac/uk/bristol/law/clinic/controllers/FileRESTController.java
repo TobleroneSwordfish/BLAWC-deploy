@@ -248,6 +248,7 @@ public class FileRESTController
                 }
                 catch (Exception e)
                 {
+                    System.out.println();
                     return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
                 }
             }
