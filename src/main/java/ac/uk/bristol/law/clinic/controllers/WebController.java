@@ -909,7 +909,7 @@ public class WebController {
             walkthrough.Close(walkthroughStepRepository, walkthroughDocsRepository, walkthroughStepDocsRepository);
             walkthroughRepository.delete(walkthrough);
         }
-        return "redirect:/";
+        return "redirect:/allwalkthroughs";
     }
 
     @Secured({"ROLE_ADMIN"})

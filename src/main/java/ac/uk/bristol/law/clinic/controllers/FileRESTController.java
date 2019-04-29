@@ -126,6 +126,10 @@ public class FileRESTController
                         {
                             headers.setContentType(MediaType.IMAGE_JPEG);
                         }
+                        else if (filename.endsWith(".txt"))
+                        {
+                            headers.setContentType(MediaType.TEXT_PLAIN);
+                        }
                         headers.add("Content-Disposition","inline; filename= " + file.getName());
                         return ResponseEntity.ok().contentLength(bytes.length)
                                 .contentType(MediaType.parseMediaType("application/octet-stream")).headers(headers).body(bytes);
