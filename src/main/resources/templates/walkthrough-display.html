@@ -74,7 +74,7 @@
         <form th:action="${'/add-walkthrough-step?id=' + walkthroughId}" th:object="${stepCreation}" method="post">
             <div class="form-row">
                 <div class="form-group col-md-6">
-                    <input type="text" class="form-control" id="stepname" placeholder="Step description" th:field="*{name}">
+                    <input type="text" class="form-control" id="stepname" placeholder="Step name" th:field="*{name}">
                 </div>
             </div>
 

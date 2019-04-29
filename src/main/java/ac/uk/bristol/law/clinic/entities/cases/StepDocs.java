@@ -44,9 +44,9 @@ public class StepDocs {
     public StepDocs(WalkthroughStepDocs stepDoc, CaseStep step, FileStorageService fileStorageService)
     {
         this.name = stepDoc.getName();
-        String newPath = "/case/" + step.concreteCase.getId() + "/step/" + step.getStepNumber() + "/";
-        this.url = newPath + stepDoc.getName();
-        fileStorageService.cloneFile(FileStorageService.cutFilename(stepDoc.getUrl()), stepDoc.getName(), newPath, name);
+        String newPath = "case/" + step.concreteCase.getId() + "/step/" + step.getStepNumber() + "/";
+        this.url = "/" + newPath + stepDoc.getName();
+        fileStorageService.cloneFile(FileStorageService.cutFilename(stepDoc.getUrl().substring(1)), stepDoc.getName(), newPath, name);
         this.setCasestep(step);
     }
 

@@ -33,10 +33,13 @@ public class FileStorageService
 
     public boolean fileExists(String pathString)
     {
+        System.out.print("File " + pathString);
         Path fullPath = basePath.resolve(pathString);
         if(Files.isRegularFile(fullPath) ){
+            System.out.println(" exists");
             return true;
         }else{
+            System.out.println(" does not exist");
             return false;
         }
     }
@@ -69,27 +72,24 @@ public class FileStorageService
     //todo
     public void deleteFile(String path, String filename)
     {
-        if (basePath.resolve(path).resolve(filename).toFile().exists())
+        if (basePath.resolve(path).resolve(filename).toFile().delete())
         {
-
+            //cool
         }
         else
         {
-            System.out.println();
+            System.out.println("Unable to delete file" + filename + " as it does not exist");
         }
     }
 
     public void cloneFile(String path, String filename, String newPath, String newFilename)
     {
-        System.out.println("Cloning file " + filename +" from " + path + " to " + newPath);
+        System.out.println("Cloning file from " + path + filename + " to " + newPath + newFilename);
         try
         {
-            path = path.substring(1); //don't question it
-            newPath = newPath.substring(1); //they come with "/"s on the front, and .resolve goes full linux and treats that as an absolute path
+//            path = path.substring(1); //don't question it
+//            newPath = newPath.substring(1); //they come with "/"s on the front, and .resolve goes full linux and treats that as an absolute path
             File file = basePath.resolve(path).resolve(filename).toFile();
-            System.out.println("old file: " + file);
-            System.out.println("file exists: " + file.exists());
-            System.out.println("file is file: " + file.isFile());
             if (file.exists() && file.isFile())
             {
                 Path pathVar = basePath.resolve(newPath).resolve(newFilename);
@@ -104,6 +104,10 @@ public class FileStorageService
                 }
                 outstream.close();
                 instream.close();
+            }
+            else
+            {
+                System.out.println("File does not exist");
             }
         }
         catch (Exception e)

@@ -55,12 +55,12 @@
             <!--</select>-->
         <!--</div>-->
         <!--<small id="supervisorHelp" class="form-text text-muted">Add a supervisor to oversee your newly created case.</small>-->
-        <h4  style="margin-top:15px;">Case Type</h4>
+        <h4  style="margin-top:15px;">Case Template</h4>
 
         <div th:each="caseType: ${caseTypes}" class="card col-sm redirect-button" th:attr="data-walkthroughid=${caseType.getId()}" style="width: 18rem; margin-right:25px;">
             <div style="cursor:pointer" class="card-body row">
                 <h5 class="card-title" th:text="${caseType.getName()}" ></h5>
-                <p class="card-text" th:text="${caseType.getDescription()}">Quick Beautiful description of when to choose case type and what entails.</p>
+                <p class="card-text" th:text="${caseType.getDescription()}">Quick Beautiful description of when to choose case template and what entails.</p>
                 <!--<button class="btn btn-primary redirect-button" th:attr="data-walkthroughID=${caseType.getId()}">Select</button>-->
             </div>
         </div>

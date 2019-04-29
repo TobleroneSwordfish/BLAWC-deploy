@@ -9,6 +9,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -24,8 +29,22 @@ public class LawClinicApplicationTests {
 	@Test
 	public void storeFile() throws IOException {
 		FileStorageService fileStore = new FileStorageService(storagePropeties);
-		fileStore.storeFile("testdest/folder", IOUtils.toInputStream("some test data for my input stream", "UTF-8"), "testFile");
-		assert (fileStore.fileExists("testdest/folder/testFile"));
+		String path = "testdest/folder/";
+		String filename = "testFile";
+		String testData = "some test data for my input stream";
+
+		InputStream inputStream = IOUtils.toInputStream(testData, "UTF-8");
+		fileStore.storeFile(path, inputStream, filename);
+		inputStream.close();
+		assert (fileStore.fileExists(path + filename));
+
+
+		String newPath = "testdest/folder2/";
+		fileStore.cloneFile(path, filename, newPath, filename);
+		assert(fileStore.fileExists(newPath + filename));
+
+		fileStore.deleteFile(path, filename);
+		assert (!fileStore.fileExists(path + filename));
 	}
 
 	@Test

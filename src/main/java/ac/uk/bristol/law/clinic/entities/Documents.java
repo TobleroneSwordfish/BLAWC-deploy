@@ -84,12 +84,12 @@ public class Documents {
     public Documents(WalkthroughDocs doc, boolean clientAccess, User originator, FileStorageService fileStorageService, Case owner)
     {
         this.name = doc.getName();
-        this.url = doc.getUrl();
         this.clientAccess = clientAccess;
         this.originator = originator;
         this.caseowner = owner;
-        String newPath = "/case/" + caseowner.getId() + "/" + name;
-        fileStorageService.cloneFile(doc.getUrl(), name, newPath, name);
+        String newPath = "case/" + caseowner.getId() + "/";
+        fileStorageService.cloneFile(FileStorageService.cutFilename(doc.getUrl()).substring(1), name, newPath, name);
+        this.url = "/" + newPath + name;
     }
 
     public Documents() {}

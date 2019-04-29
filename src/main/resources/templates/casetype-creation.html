@@ -18,11 +18,11 @@
             <form th:action="@{/casetype-creation}" th:object="${WalkthroughCreation}" method="post">
                 <div class="form-group">
                     <label for="name">Name: </label>
-                    <input type="text" class="form-control" placeholder="enter name of new case type" th:value="${name}" th:field="*{name}" id="name">
+                    <input type="text" class="form-control" placeholder="Enter name of new case template" th:value="${name}" th:field="*{name}" id="name">
                 </div>
                 <div class="form-group">
                     <label for="name">Description: </label>
-                    <textarea class="form-controle" rows="3" style="min-width: 100%" placeholder="briefly describe when to use this case type" th:value="${description}" th:field="*{description}" id="description"></textarea>
+                    <textarea class="form-controle" rows="3" style="min-width: 100%" placeholder="Briefly describe when to use this case template" th:value="${description}" th:field="*{description}" id="description"></textarea>
                 </div>
                 <button class="btn" type="submit">Add Steps</button>
             </form>
