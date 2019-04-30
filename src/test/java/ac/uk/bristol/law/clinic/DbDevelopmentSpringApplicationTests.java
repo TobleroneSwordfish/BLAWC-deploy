@@ -418,6 +418,7 @@ public class DbDevelopmentSpringApplicationTests {
         Walkthrough walkthroughA = new Walkthrough("walker");
         WalkthroughDocs walkthroughDocs = new WalkthroughDocs("walkthroughTemplate1", "/walkthrough/walker/walkthroughTemplate1");
         walkthroughRepository.save(walkthroughA);
+        walkthroughA.addDoc(walkthroughDocs);
         walkthroughDocsRepository.save(walkthroughDocs);
 
         assert(!walkthroughA.getWalkthroughDocs().isEmpty());

@@ -73,7 +73,7 @@ public class Case implements Serializable {
     }
 
     @Getter
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.ALL},
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.REFRESH},
             mappedBy = "myCases")
     private Set<User> users = new HashSet<>();//Note:users are not clients here
     public void addLawyer(User newLawyer){
