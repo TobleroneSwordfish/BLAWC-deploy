@@ -49,6 +49,9 @@ public class WebController {
     private UserRepository userRepository;
 
     @Autowired
+    WalkthroughStepDocsRepository walkthroughStepDocsRepository;
+
+    @Autowired
     private ActionRepository actionRepository;
 
     @Autowired
@@ -901,7 +904,7 @@ public class WebController {
 
     @Secured({"ROLE_ADMIN"})
     @PostMapping("/confirm-delete-walkthrough")
-    public String deleteWalkthroughPost(@RequestParam("id") Long id, @Autowired WalkthroughDocsRepository walkthroughDocsRepository, @Autowired WalkthroughStepDocsRepository walkthroughStepDocsRepository) {
+    public String deleteWalkthroughPost(@RequestParam("id") Long id, @Autowired WalkthroughDocsRepository walkthroughDocsRepository) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.isAuthenticated())
         {
